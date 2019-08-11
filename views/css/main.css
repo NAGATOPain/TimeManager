@@ -1,0 +1,23 @@
+.wrapper{
+    display: flex;
+    width: 100%;
+}
+
+#sidebar{
+    width: 250px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 999;
+    background: #2f4252;
+    color: #fff;
+}
+
+.sidebar-header{
+    background: #18344d;
+}
+
+.sidebar-component{
+    background: #2a4054;
+}
