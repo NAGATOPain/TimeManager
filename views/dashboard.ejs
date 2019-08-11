@@ -7,24 +7,31 @@
         <title>Dashboard</title>
     </head>
     <body>
-        <div class="wrapper">
-            <nav id="sidebar" class="text-center">
-                <div class="sidebar-header text-center mt-3 mb-3">
-                    <img class="w-25 h-25 float-left" src="img/logo.png" alt="">
-                    <h4 class="font-weight-bold"> TimeManager v1.0.0 </h4>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm-2.5 sidebar text-center">
+                    <div class="sidebar-header text-center p-4">
+                        <img class="w-25 h-25 float-left" src="img/logo.png" alt="">
+                        <h4 class="font-weight-bold"> TimeManager v1.0.0 </h4>
+                    </div>
+                    <div>
+                        <% sidebarComponent.forEach(function(element){ %>
+                            <div class="sidebar-component mt-3 mb-3 pt-3 pb-3 text-center">
+                                <%- element %>
+                            </div>
+                        <% }); %>
+                    </div>
                 </div>
-
-                <div>
-                    <% sidebarComponent.forEach(function(element){ %>
-                        <div class="sidebar-component mt-3 mb-3 pt-3 pb-3 text-center">
-                            <%- element %>
+                <div class="col-sm ">
+                    <div class="row topnavbar">
+                        <div class="border col text-left p-4">
+                            <%- currentFeature%>
                         </div>
-                    <% }); %>
+                        <div class="border col text-right p-4">
+                            ass
+                        </div>
+                    </div>
                 </div>
-            </nav>
-
-            <div id="content">
-
             </div>
         </div>
     </body>

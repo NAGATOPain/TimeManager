@@ -43,7 +43,7 @@ exports.run = (app) => {
 
     // Dash board
     app.get('/dashboard', (req, res) => {
-        res.render(VIEWS_PATH + 'dashboard', {sidebarComponent: ['ass', 'asss1']});
+        res.render(VIEWS_PATH + 'dashboard', {sidebarComponent: ['ass', 'asss1'], currentFeature: 'Luudeptrai'});
     });
 
     app.use((req, res, next) => {
