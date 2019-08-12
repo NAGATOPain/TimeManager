@@ -1,5 +1,7 @@
+const model = require('../models/model.js');
+
 function renderInboxFeature(){
-    return {title: 'Inbox', content: '1'};
+    return model.getInboxData();
 }
 
 function renderBookFeature(){

@@ -1,34 +1,54 @@
 const VIEWS_PATH = '../views/';
 var renderer = require('./featureRenderer.js');
+var enviroment = require('../env.js');
+var model = require('../models/model.js');
 
 function signUpPageProcessing(app){
-    app.get('/signup', (req, res) => {
-        res.render(VIEWS_PATH + 'signup');
+    app.get('/signup', async (req, res) => {
+        res.render(VIEWS_PATH + 'signup', {APP_NAME: enviroment.APP_NAME, APP_VERSION: enviroment.APP_VERSION});
     });
 
-    app.post('/signup', (req, res, next) => {
-        let username = req.body.username;
+    app.post('/signup', async function (req, res, next) {
+
+        let user = req.body.username;
         let email = req.body.email;
         let pass = req.body.password;
-        console.log(`Request body: ${req.body}`);
-        console.log(`POST: Username = ${username}, Email = ${email}, Password: ${pass}`);
 
-        res.status(200).json(req.body);
+        let message = await model.createAccount(email, user, pass);
+        if (message === 'OK'){
+            res.status(200).redirect('/signin');
+        }
+        else if (message === 'Failed'){
+            res.status(200).send("This account has existed.");
+        }
     });
 }
 
 function signInPageProcessing(app){
-    app.get('/signin', (req, res) => {
-        res.render(VIEWS_PATH + 'signin');
+    app.get('/signin', async (req, res) => {
+        res.render(VIEWS_PATH + 'signin', {APP_NAME: enviroment.APP_NAME, APP_VERSION: enviroment.APP_VERSION});
     });
 
-    app.post('/signin', (req, res) => {
+    app.post('/signin', async (req, res) => {
         let username = req.body.username;
         let pass = req.body.password;
-        console.log(`Request body: ${req.body}`);
-        console.log(`POST: Username = ${username}, Password: ${pass}`);
+        let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 
-        res.status(200).json(req.body);
+        console.log(`IP: ${ip}`);
+
+        let message = await model.validateLogin(username, pass, ip, req.cookie.log);
+        if (message === 'OK' || message[0] === 'OK'){
+            res.status(200)
+            .cookie('log', message[1])
+            .send('cookie set')
+            .redirect('/dashboard');
+        }
+        else if (message === 'N_Exist'){
+
+        }
+        else if (message == 'P_Wrong'){
+
+        }
     });
 }
 
@@ -46,13 +66,15 @@ function dashBoardProcessing(app){
     let title = 'Hi there';
     let obj = {
         'sidebarComponent': sidebarComponents,
+        'APP_NAME': enviroment.APP_NAME,
+        'APP_VERSION': enviroment.APP_VERSION,
         'title': title
     }
-    app.get('/dashboard', (req, res) => {
+    app.get('/dashboard', async (req, res) => {
         res.status(200).render(VIEWS_PATH + 'dashboard', obj);
     });
 
-    app.post('/dashboard', (req, res) => {
+    app.post('/dashboard', async (req, res) => {
         let btnClicked = req.body.btnClicked;
         res.status(200).send(renderer.render(btnClicked));
     });

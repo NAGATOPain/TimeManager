@@ -14,7 +14,7 @@ There are some features of this app:
 
 ## How to build this app:
 ```console
-users@user:~$ git clone https://github.com/NAGATOPain/TimeManager.git
-users@user:~$ cd TimeManager
-users@user:~$ npm start
+$ git clone https://github.com/NAGATOPain/TimeManager.git
+$ cd TimeManager
+$ npm start
 ```
