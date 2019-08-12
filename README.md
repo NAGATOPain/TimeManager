@@ -9,6 +9,8 @@ There are some features of this app:
 4. Generate calendar-like schedule.
 5. Control your book reading processing (Book section).
 6. Control your project processing (Project section).
+7. Control your money.
+8. Control your daily works.
 
 ## How to build this app:
 ```console

@@ -1,4 +1,5 @@
-const VIEWS_PATH = '../views/'
+const VIEWS_PATH = '../views/';
+var renderer = require('./featureRenderer.js');
 
 function signUpPageProcessing(app){
     app.get('/signup', (req, res) => {
@@ -31,6 +32,32 @@ function signInPageProcessing(app){
     });
 }
 
+function dashBoardProcessing(app){
+
+    let sidebarComponents = [
+        { 'id': 'btnInbox', 'icon': '/img/inbox.png', 'text': 'Inbox'},
+        { 'id': 'btnBooks', 'icon': '/img/book.png', 'text': 'Books'},
+        { 'id': 'btnProject', 'icon': '/img/project.png', 'text': 'Projects'},
+        { 'id': 'btnDaily', 'icon': '/img/daily.png', 'text': 'Daily Works'},
+        { 'id': 'btnMoney', 'icon': '/img/money.png', 'text': 'Money'},
+        { 'id': 'btnSchedule', 'icon': '/img/calendar.png', 'text': 'Schedule Render'}
+    ];
+
+    let title = 'Hi there';
+    let obj = {
+        'sidebarComponent': sidebarComponents,
+        'title': title
+    }
+    app.get('/dashboard', (req, res) => {
+        res.status(200).render(VIEWS_PATH + 'dashboard', obj);
+    });
+
+    app.post('/dashboard', (req, res) => {
+        let btnClicked = req.body.btnClicked;
+        res.status(200).send(renderer.render(btnClicked));
+    });
+}
+
 exports.run = (app) => {
 
     console.log("Imported controller");
@@ -42,9 +69,7 @@ exports.run = (app) => {
     signInPageProcessing(app);
 
     // Dash board
-    app.get('/dashboard', (req, res) => {
-        res.render(VIEWS_PATH + 'dashboard', {sidebarComponent: ['ass', 'asss1'], currentFeature: 'Luudeptrai'});
-    });
+    dashBoardProcessing(app);
 
     app.use((req, res, next) => {
         res.status(404).render(VIEWS_PATH + 'errors');

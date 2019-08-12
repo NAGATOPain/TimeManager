@@ -13,8 +13,16 @@
     background: #18344d;
 }
 
+.sidebar-header:hover{
+    background-color: #5dc27b;
+}
+
 .sidebar-component{
-    background: #2a4054;
+    background: #18344d;
+}
+
+.sidebar-component:hover{
+    background-color: #5dc27b;
 }
 
 .topnavbar{

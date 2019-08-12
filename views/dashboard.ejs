@@ -4,32 +4,47 @@
         <meta charset="utf-8">
         <link rel="stylesheet" type="text/css" href="/css/bootstrap.min.css">
         <link rel="stylesheet" type="text/css" href="/css/main.css">
+        <script src="/js/jquery.min.js"></script>
+        <script src="/js/main.js"></script>
         <title>Dashboard</title>
     </head>
     <body>
         <div class="container-fluid">
             <div class="row">
-                <div class="col-sm-2.5 sidebar text-center">
-                    <div class="sidebar-header text-center p-4">
-                        <img class="w-25 h-25 float-left" src="img/logo.png" alt="">
-                        <h4 class="font-weight-bold"> TimeManager v1.0.0 </h4>
+                <div class="col-sm-2 sidebar text-center">
+                    <div id="header" class="row sidebar-header text-center">
+                        <div class="col-sm p-4">
+                            <img class="w-50" src="img/logo.png" alt="">
+                        </div>
+                        <div class="col p-4">
+                            <h4 class="font-weight-bold">v1.0.0</h4>
+                        </div>
                     </div>
-                    <div>
-                        <% sidebarComponent.forEach(function(element){ %>
-                            <div class="sidebar-component mt-3 mb-3 pt-3 pb-3 text-center">
-                                <%- element %>
+                    <% var button = []; %>
+                    <% sidebarComponent.forEach(function(element){ %>
+                        <div id="<%= element.id %>" class="row sidebar-component mt-2">
+                            <div class="col-sm-3 pt-2 pb-2">
+                                <img class="w-100" src="<%= element.icon %>" alt="">
                             </div>
-                        <% }); %>
-                    </div>
+                            <div class="col pt-2 pb-2 text-center">
+                                <%- element.text %>
+                            </div>
+                        </div>
+                    <% }); %>
                 </div>
                 <div class="col-sm ">
                     <div class="row topnavbar">
-                        <div class="border col text-left p-4">
-                            <%- currentFeature%>
+                        <div class="col text-left p-2">
+                            <h4 id="title">
+                                <%- title%>
+                            </h4>
                         </div>
-                        <div class="border col text-right p-4">
-                            ass
+                        <div class="col text-right p-2">
+                            <button type="button" class="btn btn-outline-light">Log out</button>
                         </div>
+                    </div>
+                    <div class="row">
+                        <div id="content" class="col border p-4"> </div>
                     </div>
                 </div>
             </div>
