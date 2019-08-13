@@ -1,3 +1,5 @@
-<div class="<%- alertMessage.visibility %> alert alert-warning alert-dismissible fade show">
-    <%- alertMessage.message %>
-</div>
+<% if (alertMessage.visibility === 'visible') { %>
+    <div class="alert alert-danger alert-dismissible fade show">
+        <%- alertMessage.message %>
+    </div>
+<% } %>

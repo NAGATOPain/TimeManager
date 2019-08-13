@@ -3,6 +3,16 @@ var renderer = require('./featureRenderer.js');
 var enviroment = require('../env.js');
 var model = require('../models/model.js');
 
+var signInUpRequestData = {
+    APP_NAME: enviroment.APP_NAME,
+    APP_VERSION: enviroment.APP_VERSION,
+    alertMessage: {
+        visibility: "invisible",
+        message: ""
+    }
+};
+
+
 async function checkCookieForLogIn(cookies){
     let cookieArray = model.parseCookie(cookies);
     if (cookieArray){
@@ -14,22 +24,15 @@ async function checkCookieForLogIn(cookies){
 
 function signUpPageProcessing(app){
 
-    let requestData = {
-        APP_NAME: enviroment.APP_NAME,
-        APP_VERSION: enviroment.APP_VERSION,
-        alertMessage: {
-            visibility: "invisible",
-            message: ""
-        }
-    };
-
     app.get('/signup', async (req, res) => {
         let checkCookie = await checkCookieForLogIn(req.cookies);
         if (checkCookie){
             res.status(200).redirect('/dashboard');
         }
         else {
-            res.render(VIEWS_PATH + 'signup', requestData);
+            signInUpRequestData.alertMessage.visibility = "invisible";
+            signInUpRequestData.alertMessage.message = "";
+            res.render(VIEWS_PATH + 'signup', signInUpRequestData);
         }
     });
 
@@ -44,23 +47,14 @@ function signUpPageProcessing(app){
             res.status(200).redirect('/signin');
         }
         else if (message === 'Failed'){
-            requestData.alertMessage.visibility = "visible";
-            requestData.alertMessage.message = "This account has existed!";
-            res.render(VIEWS_PATH + 'signup', requestData);
+            signInUpRequestData.alertMessage.visibility = "visible";
+            signInUpRequestData.alertMessage.message = "This account has existed!";
+            res.render(VIEWS_PATH + 'signup', signInUpRequestData);
         }
     });
 }
 
 function signInPageProcessing(app){
-
-    let requestData = {
-        APP_NAME: enviroment.APP_NAME,
-        APP_VERSION: enviroment.APP_VERSION,
-        alertMessage: {
-            visibility: "invisible",
-            message: ""
-        }
-    };
 
     app.get('/signin', async (req, res) => {
         let checkCookie = await checkCookieForLogIn(req.cookies);
@@ -68,7 +62,9 @@ function signInPageProcessing(app){
             res.status(200).redirect('/dashboard');
         }
         else {
-            res.render(VIEWS_PATH + 'signin', requestData);
+            signInUpRequestData.alertMessage.visibility = "invisible";
+            signInUpRequestData.alertMessage.message = "";
+            res.render(VIEWS_PATH + 'signin', signInUpRequestData);
         }
     });
 
@@ -83,14 +79,14 @@ function signInPageProcessing(app){
             res.status(200).redirect('/dashboard');
         }
         else if (message === 'N_Exist'){
-            requestData.alertMessage.visibility = "visible";
-            requestData.alertMessage.message = "This account didn't exist!";
-            res.render(VIEWS_PATH + 'signin', requestData);
+            signInUpRequestData.alertMessage.visibility = "visible";
+            signInUpRequestData.alertMessage.message = "This account didn't exist!";
+            res.render(VIEWS_PATH + 'signin', signInUpRequestData);
         }
         else if (message == 'P_Wrong'){
-            requestData.alertMessage.visibility = "visible";
-            requestData.alertMessage.message = "The password is wrong!";
-            res.render(VIEWS_PATH + 'signin', requestData);
+            signInUpRequestData.alertMessage.visibility = "visible";
+            signInUpRequestData.alertMessage.message = "The password is wrong!";
+            res.render(VIEWS_PATH + 'signin', signInUpRequestData);
         }
     });
 }
