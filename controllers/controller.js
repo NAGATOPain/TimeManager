@@ -93,25 +93,7 @@ function signInPageProcessing(app){
 
 function dashBoardProcessing(app){
 
-    let sidebarComponents = [
-        { 'id': 'btnInbox', 'icon': '/img/inbox.png', 'text': 'Inbox'},
-        { 'id': 'btnBooks', 'icon': '/img/book.png', 'text': 'Books'},
-        { 'id': 'btnProject', 'icon': '/img/project.png', 'text': 'Projects'},
-        { 'id': 'btnDaily', 'icon': '/img/daily.png', 'text': 'Daily Works'},
-        { 'id': 'btnMoney', 'icon': '/img/money.png', 'text': 'Money'},
-        { 'id': 'btnSchedule', 'icon': '/img/calendar.png', 'text': 'Schedule Render'}
-    ];
-
-    let title = 'Hi there';
-    let obj = {
-        'sidebarComponent': sidebarComponents,
-        'APP_NAME': enviroment.APP_NAME,
-        'APP_VERSION': enviroment.APP_VERSION,
-        'title': title
-    }
-
     app.post('/dashboard/signout', async (req, res) => {
-        console.log("LOGGED OUT");
         let cookieArray = model.parseCookie(req.cookies);
         if (cookieArray){
             let deleteSuccessfull = await model.deleteTokenOfUser(...cookieArray);
@@ -128,7 +110,9 @@ function dashBoardProcessing(app){
             res.status(200).redirect('/signin');
         }
         else {
-            res.status(200).render(VIEWS_PATH + 'dashboard', obj);
+            requestData = renderer.render('btnHome');
+            requestData.title = `Hi ${model.parseCookie(req.cookies)[0]}, may I help you?`;
+            res.status(200).render(VIEWS_PATH + 'dashboard', requestData);
         }
     });
 

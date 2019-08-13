@@ -1,4 +1,24 @@
 const model = require('../models/model.js');
+const enviroment = require('../env.js');
+
+function renderHomeFeature(){
+    const sidebarComponents = [
+        { 'id': 'btnInbox', 'icon': '/img/inbox.png', 'text': 'Inbox'},
+        { 'id': 'btnBooks', 'icon': '/img/book.png', 'text': 'Books'},
+        { 'id': 'btnProject', 'icon': '/img/project.png', 'text': 'Projects'},
+        { 'id': 'btnDaily', 'icon': '/img/daily.png', 'text': 'Daily Works'},
+        { 'id': 'btnMoney', 'icon': '/img/money.png', 'text': 'Money'},
+        { 'id': 'btnSchedule', 'icon': '/img/calendar.png', 'text': 'Schedule Render'}
+    ];
+
+    const obj = {
+        'sidebarComponent': sidebarComponents,
+        'APP_NAME': enviroment.APP_NAME,
+        'APP_VERSION': enviroment.APP_VERSION,
+        'title': ''
+    }
+    return obj;
+}
 
 function renderInboxFeature(){
     return model.getInboxData();
@@ -29,8 +49,10 @@ function renderError(){
 }
 
 exports.render = (btnClicked) => {
-
-    if (btnClicked === 'btnInbox')
+    if (btnClicked === 'btnHome')
+        return renderHomeFeature();
+        
+    else if (btnClicked === 'btnInbox')
         return renderInboxFeature();
 
     else if (btnClicked === 'btnBooks')

@@ -6,5 +6,5 @@ if [[ $1 = 'reset' ]]; then
 fi
 
 sudo fuser -k $PORT/tcp;
-npm start;
 google-chrome http://localhost:$PORT;
+npm start;
