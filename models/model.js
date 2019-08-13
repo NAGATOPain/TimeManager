@@ -124,10 +124,23 @@ exports.init = () => {
 exports.createAccount = async function(email, user, pass){
     const hash = await bcrypt.hash(pass, CRYPTO_SEED_LENGTH);
     return new Promise((resolve, reject) => {
-        db.run(`INSERT INTO user VALUES (?, ?, ?, ?);`, ['', email, user, hash], (err, result) => {
-            if (err) resolve('Failed');
-            else resolve('OK');
-        });
+        // Check email, user, pass here
+        let mailRegex = /(\w|-)+@(\w|-)+(\.(\w|-)+)+/g;
+        let userRegex = /(\w)+/g;
+        let passwordRegex = /(\w)+/g;
+
+        if (!mailRegex.test(email))
+            resolve('Email');
+        else if (!userRegex.test(user))
+            resolve('Username');
+        else if (!passwordRegex.test(pass))
+            resolve('Password');
+        else {
+            db.run(`INSERT INTO user VALUES (?, ?, ?, ?);`, ['', email, user, hash], (err, result) => {
+                if (err) resolve('Exist');
+                else resolve('OK');
+            });
+        }
     });
 }
 
@@ -136,7 +149,7 @@ exports.validateLogin = async function(user, pass){
     const hashedPassword = await getHashedPassword(user);
     if (hashedPassword === undefined){
         // Error here
-        return 'N_Exist';
+        return ['N_Exist', ''];
     }
     else {
         let isValidPassword = await isValidBCryptedString(pass, hashedPassword);
@@ -149,7 +162,7 @@ exports.validateLogin = async function(user, pass){
             return ['OK', newToken];
         }
         else {
-            return 'P_Wrong';
+            return ['P_Wrong', ''];
         }
     }
 }

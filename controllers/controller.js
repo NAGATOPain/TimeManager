@@ -46,11 +46,23 @@ function signUpPageProcessing(app){
         if (message === 'OK'){
             res.status(200).redirect('/signin');
         }
-        else if (message === 'Failed'){
+        else {
             signInUpRequestData.alertMessage.visibility = "visible";
-            signInUpRequestData.alertMessage.message = "This account has existed!";
+            if (message === 'Exist')
+                signInUpRequestData.alertMessage.message = "This account has existed!";
+
+            else if (message === 'Email')
+                signInUpRequestData.alertMessage.message = "This email is not valid!";
+
+            else if (message === 'Username')
+                signInUpRequestData.alertMessage.message = "Username contains only alphanumeric and underscore!";
+
+            else if (message === 'Password')
+                signInUpRequestData.alertMessage.message = "Password contains only alphanumeric and underscore!";
+
             res.render(VIEWS_PATH + 'signup', signInUpRequestData);
         }
+
     });
 }
 
@@ -74,16 +86,16 @@ function signInPageProcessing(app){
         let password = req.body.password;
 
         let message = await model.validateLogin(username, password);
-        if (typeof message === 'object' || message[0] === 'OK'){
+        if (message[0] === 'OK'){
             res.cookie('acc', {items: [username, message[1]]});
             res.status(200).redirect('/dashboard');
         }
-        else if (message === 'N_Exist'){
+        else if (message[0] === 'N_Exist'){
             signInUpRequestData.alertMessage.visibility = "visible";
             signInUpRequestData.alertMessage.message = "This account didn't exist!";
             res.render(VIEWS_PATH + 'signin', signInUpRequestData);
         }
-        else if (message == 'P_Wrong'){
+        else if (message[0] == 'P_Wrong'){
             signInUpRequestData.alertMessage.visibility = "visible";
             signInUpRequestData.alertMessage.message = "The password is wrong!";
             res.render(VIEWS_PATH + 'signin', signInUpRequestData);
