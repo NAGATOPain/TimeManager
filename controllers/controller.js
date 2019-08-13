@@ -3,9 +3,24 @@ var renderer = require('./featureRenderer.js');
 var enviroment = require('../env.js');
 var model = require('../models/model.js');
 
+async function checkCookieForLogIn(cookies){
+    let cookieArray = model.parseCookie(cookies);
+    if (cookieArray){
+        let result = await model.isLoggedIn(...cookieArray);
+        return result;
+    }
+    return false;
+}
+
 function signUpPageProcessing(app){
     app.get('/signup', async (req, res) => {
-        res.render(VIEWS_PATH + 'signup', {APP_NAME: enviroment.APP_NAME, APP_VERSION: enviroment.APP_VERSION});
+        let checkCookie = await checkCookieForLogIn(req.cookies);
+        if (checkCookie){
+            res.status(200).redirect('/dashboard');
+        }
+        else {
+            res.render(VIEWS_PATH + 'signup', {APP_NAME: enviroment.APP_NAME, APP_VERSION: enviroment.APP_VERSION});
+        }
     });
 
     app.post('/signup', async function (req, res, next) {
@@ -26,28 +41,30 @@ function signUpPageProcessing(app){
 
 function signInPageProcessing(app){
     app.get('/signin', async (req, res) => {
-        res.render(VIEWS_PATH + 'signin', {APP_NAME: enviroment.APP_NAME, APP_VERSION: enviroment.APP_VERSION});
+        let checkCookie = await checkCookieForLogIn(req.cookies);
+        if (checkCookie){
+            res.status(200).redirect('/dashboard');
+        }
+        else {
+            res.render(VIEWS_PATH + 'signin', {APP_NAME: enviroment.APP_NAME, APP_VERSION: enviroment.APP_VERSION});
+        }
     });
 
     app.post('/signin', async (req, res) => {
+
         let username = req.body.username;
-        let pass = req.body.password;
-        let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+        let password = req.body.password;
 
-        console.log(`IP: ${ip}`);
-
-        let message = await model.validateLogin(username, pass, ip, req.cookie.log);
-        if (message === 'OK' || message[0] === 'OK'){
-            res.status(200)
-            .cookie('log', message[1])
-            .send('cookie set')
-            .redirect('/dashboard');
+        let message = await model.validateLogin(username, password);
+        if (typeof message === 'object' || message[0] === 'OK'){
+            res.cookie('acc', {items: [username, message[1]]});
+            res.status(200).redirect('/dashboard');
         }
         else if (message === 'N_Exist'){
-
+            res.status(200).send("This account didn't exist!");
         }
         else if (message == 'P_Wrong'){
-
+            res.status(200).send("The password is wrong");
         }
     });
 }
@@ -70,8 +87,27 @@ function dashBoardProcessing(app){
         'APP_VERSION': enviroment.APP_VERSION,
         'title': title
     }
+
+    app.post('/dashboard/signout', async (req, res) => {
+        console.log("LOGGED OUT");
+        let cookieArray = model.parseCookie(req.cookies);
+        if (cookieArray){
+            let deleteSuccessfull = await model.deleteTokenOfUser(...cookieArray);
+            if (deleteSuccessfull){
+                res.clearCookie('acc');
+                res.redirect('/signin');
+            }
+        }
+    });
+
     app.get('/dashboard', async (req, res) => {
-        res.status(200).render(VIEWS_PATH + 'dashboard', obj);
+        let checkCookie = await checkCookieForLogIn(req.cookies);
+        if (!checkCookie){
+            res.status(200).redirect('/signin');
+        }
+        else {
+            res.status(200).render(VIEWS_PATH + 'dashboard', obj);
+        }
     });
 
     app.post('/dashboard', async (req, res) => {
@@ -83,6 +119,10 @@ function dashBoardProcessing(app){
 exports.run = (app) => {
 
     console.log("Imported controller");
+
+    app.get('/', async (req, res) => {
+        res.redirect('/signin');
+    });
 
     // Sign up page
     signUpPageProcessing(app);

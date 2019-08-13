@@ -1,6 +1,7 @@
 const constants = require('../env.js');
 var sqlite3 = require('sqlite3').verbose();
 var bcrypt = require('bcryptjs');
+var sha256 = require('js-sha256');
 
 var fs = require('fs');
 var existsDatabase = fs.existsSync(constants.DATABASE_PATH);
@@ -10,7 +11,7 @@ const CRYPTO_SEED_LENGTH = 13;
 
 // Hashing
 
-async function checkValidHashedString(raw, hashed){
+async function isValidBCryptedString(raw, hashed){
     return await bcrypt.compare(raw, hashed);
 }
 
@@ -26,7 +27,7 @@ function getAccessToken(user){
     return new Promise((resolve, reject) => {
         let sql = `SELECT access_token token FROM user WHERE user = ? OR email = ? ;`;
         db.get(sql, [user, user], (err, row) => {
-            if (err){
+            if (err || row === undefined){
                 resolve(undefined);
             }
             else
@@ -35,9 +36,8 @@ function getAccessToken(user){
     });
 }
 
-async function generateToken(user, pass, ip){
-    let rawString = `${user}_${pass}_${ip}`;
-    return await hashString(rawString);
+function generateToken(user, pass){
+    return sha256(`${user}_${pass}`);
 }
 
 function updateAccessToken(user, newToken){
@@ -64,12 +64,49 @@ function getHashedPassword(user){
     });
 }
 
-async function isLoggedIn(user, cookies){
-    let tokenArray = await getAccessToken();
-    if (tokenArray.includes(cookies)){
-        return true;
+exports.isLoggedIn = (user, token) => {
+    return getAccessToken(user).then((result) => {
+        if (result === undefined){
+            return false;
+        }
+        result = result.split('_');
+        if (result.includes(token)){
+            return true;
+        }
+        return false;
+    });
+}
+
+exports.parseCookie = (cookies) => {
+    if (cookies.acc !== undefined){
+        let cookie = cookies.acc;
+
+        if (typeof(cookie.items) === 'object' && cookie.items.length === 2){
+            let username = cookie.items[0];
+            let token = cookie.items[1];
+            return [username, token];
+        }
+        return false;
     }
     return false;
+}
+
+exports.deleteTokenOfUser = async (username, token) => {
+
+    let accessToken = await getAccessToken(username);
+    if (accessToken === undefined){
+        return false;
+    }
+    else {
+        accessToken = accessToken.split('_');
+        if (accessToken.includes(token)){
+            let result = accessToken.filter((value, index, arr) => { return value !== token; });
+            result = result.join('_');
+            await updateAccessToken(username, result);
+            return true;
+        }
+        else return false;
+    }
 }
 
 exports.init = () => {
@@ -95,27 +132,19 @@ exports.createAccount = function(email, user, pass){
     });
 }
 
-exports.validateLogin = async function(user, pass, ip, cookie){
-    // Check if cookie is in access token
-    let accessToken = await getAccessToken(user);
-    if (accessToken.includes(cookie)){
-        return 'OK';
-    }
-
+exports.validateLogin = async function(user, pass){
     // If not
     let hashedPassword = await getHashedPassword(user);
     if (hashedPassword === undefined){
         // Error here
         return 'N_Exist';
-        console.log("This account didn't exist");
     }
     else {
-        if (checkValidHashedString(pass, hashedPassword)){
-            console.log("OK");
-            let newToken = await generateToken(user, pass, ip);
+        if (isValidBCryptedString(pass, hashedPassword)){
+            let accessToken = await getAccessToken(user);
+            let newToken = generateToken(user, pass);
             if (accessToken.length > 0) accessToken += '_';
             accessToken += newToken;
-            console.log(accessToken);
             await updateAccessToken(user, accessToken);
             return ['OK', newToken];
         }
