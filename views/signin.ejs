@@ -1,11 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
     <head>
-        <meta charset="utf-8">
-        <link rel="icon" href="/img/logo.png">
-        <link rel="stylesheet" type="text/css" href="/css/bootstrap.min.css">
-        <link rel="stylesheet" type="text/css" href="/css/main.css">
-        <script src="/js/jquery.min.js"></script>
+        <%- include('ejs/resource') %>
         <title> Sign in </title>
     </head>
     <body class="bg-light">
@@ -37,6 +33,7 @@
                         <div class="form-group">
                             <p class="text-center"><a href="#">Forgot your password?</a></p>
                         </div>
+                        <%- include('ejs/loginAlert') %>
                         <div class="form-group text-center">
                             <button type="submit" class="btn btn-primary btn-lg btn-block">Sign in</button>
                         </div>
@@ -54,9 +51,6 @@
                 <div class="col"></div>
             </div>
         </div>
-        <footer class="mt-3 mb-3 pt-2 text-center">
-            <a class="ml-3 mr-3" href="/privacy">Privacy</a>
-            <a class="ml-3 mr-3" href="/contact">Contact us</a>
-        </footer>
+        <%- include('ejs/footer') %>
     </body>
 </html>

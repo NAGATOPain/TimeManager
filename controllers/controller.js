@@ -13,13 +13,23 @@ async function checkCookieForLogIn(cookies){
 }
 
 function signUpPageProcessing(app){
+
+    let requestData = {
+        APP_NAME: enviroment.APP_NAME,
+        APP_VERSION: enviroment.APP_VERSION,
+        alertMessage: {
+            visibility: "invisible",
+            message: ""
+        }
+    };
+
     app.get('/signup', async (req, res) => {
         let checkCookie = await checkCookieForLogIn(req.cookies);
         if (checkCookie){
             res.status(200).redirect('/dashboard');
         }
         else {
-            res.render(VIEWS_PATH + 'signup', {APP_NAME: enviroment.APP_NAME, APP_VERSION: enviroment.APP_VERSION});
+            res.render(VIEWS_PATH + 'signup', requestData);
         }
     });
 
@@ -34,19 +44,31 @@ function signUpPageProcessing(app){
             res.status(200).redirect('/signin');
         }
         else if (message === 'Failed'){
-            res.status(200).send("This account has existed.");
+            requestData.alertMessage.visibility = "visible";
+            requestData.alertMessage.message = "This account has existed!";
+            res.render(VIEWS_PATH + 'signup', requestData);
         }
     });
 }
 
 function signInPageProcessing(app){
+
+    let requestData = {
+        APP_NAME: enviroment.APP_NAME,
+        APP_VERSION: enviroment.APP_VERSION,
+        alertMessage: {
+            visibility: "invisible",
+            message: ""
+        }
+    };
+
     app.get('/signin', async (req, res) => {
         let checkCookie = await checkCookieForLogIn(req.cookies);
         if (checkCookie){
             res.status(200).redirect('/dashboard');
         }
         else {
-            res.render(VIEWS_PATH + 'signin', {APP_NAME: enviroment.APP_NAME, APP_VERSION: enviroment.APP_VERSION});
+            res.render(VIEWS_PATH + 'signin', requestData);
         }
     });
 
@@ -61,10 +83,14 @@ function signInPageProcessing(app){
             res.status(200).redirect('/dashboard');
         }
         else if (message === 'N_Exist'){
-            res.status(200).send("This account didn't exist!");
+            requestData.alertMessage.visibility = "visible";
+            requestData.alertMessage.message = "This account didn't exist!";
+            res.render(VIEWS_PATH + 'signin', requestData);
         }
         else if (message == 'P_Wrong'){
-            res.status(200).send("The password is wrong");
+            requestData.alertMessage.visibility = "visible";
+            requestData.alertMessage.message = "The password is wrong!";
+            res.render(VIEWS_PATH + 'signin', requestData);
         }
     });
 }

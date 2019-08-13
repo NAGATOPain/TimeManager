@@ -11,8 +11,8 @@ const CRYPTO_SEED_LENGTH = 13;
 
 // Hashing
 
-async function isValidBCryptedString(raw, hashed){
-    return await bcrypt.compare(raw, hashed);
+function isValidBCryptedString(raw, hashed){
+    return bcrypt.compare(raw, hashed);
 }
 
 async function hashString(str){
@@ -121,26 +121,26 @@ exports.init = () => {
     });
 }
 
-exports.createAccount = function(email, user, pass){
-    return bcrypt.hash(pass, CRYPTO_SEED_LENGTH).then(hash => {
-        let stmt = db.prepare('INSERT INTO user VALUES (?, ?, ?, ?);', (error) => {
-            return 'Failed';
+exports.createAccount = async function(email, user, pass){
+    const hash = await bcrypt.hash(pass, CRYPTO_SEED_LENGTH);
+    return new Promise((resolve, reject) => {
+        db.run(`INSERT INTO user VALUES (?, ?, ?, ?);`, ['', email, user, hash], (err, result) => {
+            if (err) resolve('Failed');
+            else resolve('OK');
         });
-        stmt.run('', email, user, hash);
-        stmt.finalize();
-        return 'OK';
     });
 }
 
 exports.validateLogin = async function(user, pass){
     // If not
-    let hashedPassword = await getHashedPassword(user);
+    const hashedPassword = await getHashedPassword(user);
     if (hashedPassword === undefined){
         // Error here
         return 'N_Exist';
     }
     else {
-        if (isValidBCryptedString(pass, hashedPassword)){
+        let isValidPassword = await isValidBCryptedString(pass, hashedPassword);
+        if (isValidPassword){
             let accessToken = await getAccessToken(user);
             let newToken = generateToken(user, pass);
             if (accessToken.length > 0) accessToken += '_';
