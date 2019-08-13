@@ -6,4 +6,5 @@ module.exports = Object.freeze({
     MODEL_PATH: './models/model.js',
     DATABASE_PATH: './models/data.db',
     PORT: 3000
+    
 });
