@@ -7,15 +7,39 @@ function renderHomeFeature(){
         { 'id': 'btnBooks', 'icon': '/img/book.png', 'text': 'Books'},
         { 'id': 'btnProject', 'icon': '/img/project.png', 'text': 'Projects'},
         { 'id': 'btnDaily', 'icon': '/img/daily.png', 'text': 'Daily Works'},
-        { 'id': 'btnMoney', 'icon': '/img/money.png', 'text': 'Money'},
-        { 'id': 'btnSchedule', 'icon': '/img/calendar.png', 'text': 'Schedule Render'}
+        { 'id': 'btnMoney', 'icon': '/img/money.png', 'text': 'Money'}
     ];
+
+    const calendarProperties = {
+        height: 'parent',
+        themeSystem: 'bootstrap',
+        plugins: [ 'timeGrid' , 'dayGrid', 'list'],
+        defaultView: 'dayGridMonth',
+        header: {
+            left: 'dayGridMonth, dayGridWeek, timeGridDay, listWeek',
+            center: 'title',
+            right: 'prev, today, next'
+        },
+        selectable: true,
+        events: []
+    };
+
+    const calendarScript = `
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, ${JSON.stringify(calendarProperties)});
+            calendar.render();
+        });
+    </script>`;
 
     const obj = {
         'sidebarComponent': sidebarComponents,
         'APP_NAME': enviroment.APP_NAME,
         'APP_VERSION': enviroment.APP_VERSION,
-        'title': ''
+        'title': '',
+        'calendarDiv': `<div id='calendar'></div>`,
+        'calendarScript': calendarScript
     }
     return obj;
 }
@@ -51,7 +75,7 @@ function renderError(){
 exports.render = (btnClicked) => {
     if (btnClicked === 'btnHome')
         return renderHomeFeature();
-        
+
     else if (btnClicked === 'btnInbox')
         return renderInboxFeature();
 

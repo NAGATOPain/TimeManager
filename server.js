@@ -13,6 +13,7 @@ app.use(cookieParser());
 // Resource
 app.use('/css', express.static(__dirname + '/views/css'));
 app.use('/js', express.static(__dirname + '/views/js'));
+app.use('/plugins', express.static(__dirname + '/views/plugins'))
 app.use('/img', express.static(__dirname + '/views/img'));
 
 const model = require(constants.MODEL_PATH);

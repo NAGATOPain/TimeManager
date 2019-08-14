@@ -2,6 +2,8 @@
 <html lang="en" dir="ltr">
     <head>
         <%- include('ejs/resource') %>
+        <%- include('ejs/fullcalendar')%>
+        <%- calendarScript %>
         <title>Dashboard | <%- APP_NAME%> <%- APP_VERSION %></title>
     </head>
     <body>
@@ -10,7 +12,7 @@
                 <div class="col-sm-2 sidebar text-center">
                     <div id="header" class="row sidebar-header text-center">
                         <div class="col-sm p-4">
-                            <img class="w-50" src="img/logo.png" alt="">
+                            <img class="w-50" src="img/calendar.png" alt="">
                         </div>
                         <div class="col p-4">
                             <h4 class="font-weight-bold">
@@ -42,8 +44,10 @@
                             </form>
                         </div>
                     </div>
-                    <div class="row">
-                        <div id="content" class="col border p-4"> </div>
+                    <div class="row fill-viewport-height">
+                        <div id="content" class="col fill-height border p-4">
+                            <%- calendarDiv %>
+                        </div>
                     </div>
                 </div>
             </div>
