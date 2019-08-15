@@ -9,6 +9,21 @@ var db = new sqlite3.Database(`${constants.DATABASE_PATH}`);
 
 const CRYPTO_SEED_LENGTH = 13;
 
+// Algorithms
+function isEmail(email){
+	return /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/g.test(email);
+}
+
+
+function isProperString(str){
+	// Only contains alphanumeric, _, -
+	return /^([\w-]+)$/.test(str);
+}
+
+function isProperStringWithSomeSpecialCharacter(str){
+	return /^(\w[\w-\s.,?()]+)$/.test(str);
+}
+
 // Hashing
 
 function isValidBCryptedString(raw, hashed){
@@ -23,10 +38,10 @@ async function hashString(str){
 
 // Access Token
 
-function getAccessToken(user){
+function getAccessToken(username){
     return new Promise((resolve, reject) => {
-        let sql = `SELECT access_token token FROM user WHERE user = ? OR email = ? ;`;
-        db.get(sql, [user, user], (err, row) => {
+        const sql = `SELECT access_token token FROM user WHERE user = ? OR email = ? ;`;
+        db.get(sql, [username, username], (err, row) => {
             if (err || row === undefined){
                 resolve(undefined);
             }
@@ -36,36 +51,98 @@ function getAccessToken(user){
     });
 }
 
-function generateToken(user, pass){
-    return sha256(`${user}_${pass}`);
+function generateToken(username, password){
+    return sha256(`${username}_${password}`);
 }
 
-function updateAccessToken(user, newToken){
+function updateAccessToken(username, newToken){
     return new Promise((resolve, reject) => {
-        let sql = `UPDATE user SET access_token = ? WHERE user = ? OR email = ? ;`;
-        db.run(sql, [newToken, user, user], (err) => {
+        const sql = `UPDATE user SET access_token = ? WHERE user = ? OR email = ? ;`;
+        db.run(sql, [newToken, username, username], (err) => {
             if (err) resolve(false);
             else resolve(true);
         });
     });
 }
 
-function getHashedPassword(user){
+function getHashedPassword(username){
     return new Promise((resolve, reject) => {
-        let sql = `SELECT pass pass FROM user WHERE user = ? OR email = ? ;`;
-        db.get(sql, [user, user], (err, row) => {
+        const sql = `SELECT pass password FROM user WHERE user = ? OR email = ? ;`;
+        db.get(sql, [username, username], (err, row) => {
             if (err || row === undefined) {
                 resolve(undefined);
             }
             else {
-                resolve(row.pass);
+                resolve(row.password);
             }
         });
     });
 }
 
-exports.isLoggedIn = (user, token) => {
-    return getAccessToken(user).then((result) => {
+function getDataViaUsernameAndTypeOfWorks(username, type){
+
+    return new Promise((resolve, reject) => {
+        const sql = `SELECT _rowid_, * FROM 'works' WHERE user = ? AND type = ? AND done = ? ORDER BY _rowid_ DESC`;
+        db.all(sql, [username, type, 0], (err, rows) => {
+            if (err || rows === undefined){
+                resolve(undefined);
+            }
+            else {
+                resolve(rows);
+            }
+        });
+    });
+}
+
+function addInboxWorkForUser(username, inboxWork){
+    return new Promise((resolve, reject) => {
+        const sql = `INSERT INTO works VALUES (?, ?, ?, ?, ?, ?);`;
+        let currentDate = new Date();
+        currentDate = currentDate.toJSON();
+        db.run(sql, [username, inboxWork, 'inbox', currentDate, currentDate, 0], (err) => {
+            if (err) {
+                resolve('Error');
+            }
+            else{
+                resolve('OK');
+            }
+        });
+    });
+}
+
+function doneInboxWorkForUser(username, inboxWork){
+
+	return new Promise((resolve, reject) => {
+		const sql = `UPDATE works SET done = 1 WHERE user = ? AND name = ? AND type = ? ;`;
+		db.run(sql, [username, inboxWork, 'inbox'], (err) => {
+            if (err) {
+                resolve('Error');
+            }
+            else{
+                resolve('OK');
+            }
+        });
+	});
+}
+
+function deleteInboxWorkForUser(username, inboxWork){
+	return new Promise((resolve, reject) => {
+		const sql = `DELETE FROM works WHERE user = ? AND name = ? AND type = ? ;`;
+		db.run(sql, [username, inboxWork, 'inbox'], (err) => {
+            if (err) {
+                resolve('Error');
+            }
+            else{
+                resolve('OK');
+            }
+        });
+	});
+}
+
+////////////////////////
+
+exports.isLoggedIn = (username, token) => {
+    return getAccessToken(username).then((result) => {
         if (result === undefined){
             return false;
         }
@@ -79,11 +156,11 @@ exports.isLoggedIn = (user, token) => {
 
 exports.parseCookie = (cookies) => {
     if (cookies.acc !== undefined){
-        let cookie = cookies.acc;
+        const cookie = cookies.acc;
 
         if (typeof(cookie.items) === 'object' && cookie.items.length === 2){
-            let username = cookie.items[0];
-            let token = cookie.items[1];
+            const username = cookie.items[0];
+            const token = cookie.items[1];
             return [username, token];
         }
         return false;
@@ -114,6 +191,8 @@ exports.init = () => {
         if (!existsDatabase){
             console.log("Create database file !");
             db.run(`CREATE TABLE user (access_token TEXT, email TEXT, user TEXT PRIMARY KEY, pass TEXT);`);
+            db.run(`CREATE TABLE works (user TEXT, name TEXT, type TEXT, from_t TEXT, to_t TEXT, done INTEGER);`);
+            db.run(`CREATE TABLE money (user TEXT, money INTEGER, from_t TEXT, to_t TEXT);`)
         }
         else {
             console.log("Exist file !");
@@ -121,22 +200,19 @@ exports.init = () => {
     });
 }
 
-exports.createAccount = async function(email, user, pass){
-    const hash = await bcrypt.hash(pass, CRYPTO_SEED_LENGTH);
+exports.createAccount = async function(email, username, password){
+    const hash = await bcrypt.hash(password, CRYPTO_SEED_LENGTH);
     return new Promise((resolve, reject) => {
         // Check email, user, pass here
-        let mailRegex = /(\w|-)+@(\w|-)+(\.(\w|-)+)+/g;
-        let userRegex = /(\w)+/g;
-        let passwordRegex = /(\w)+/g;
 
-        if (!mailRegex.test(email))
+        if (!isEmail.test(email))
             resolve('Email');
-        else if (!userRegex.test(user))
+        else if (!isProperString.test(username))
             resolve('Username');
-        else if (!passwordRegex.test(pass))
+        else if (!isProperString.test(password))
             resolve('Password');
         else {
-            db.run(`INSERT INTO user VALUES (?, ?, ?, ?);`, ['', email, user, hash], (err, result) => {
+            db.run(`INSERT INTO user VALUES (?, ?, ?, ?);`, ['', email, username, hash], (err, result) => {
                 if (err) resolve('Exist');
                 else resolve('OK');
             });
@@ -144,21 +220,21 @@ exports.createAccount = async function(email, user, pass){
     });
 }
 
-exports.validateLogin = async function(user, pass){
+exports.validateLogin = async function(username, password){
     // If not
-    const hashedPassword = await getHashedPassword(user);
+    const hashedPassword = await getHashedPassword(username);
     if (hashedPassword === undefined){
         // Error here
         return ['N_Exist', ''];
     }
     else {
-        let isValidPassword = await isValidBCryptedString(pass, hashedPassword);
+        const isValidPassword = await isValidBCryptedString(password, hashedPassword);
         if (isValidPassword){
-            let accessToken = await getAccessToken(user);
-            let newToken = generateToken(user, pass);
+            let accessToken = await getAccessToken(username);
+            const newToken = generateToken(username, password);
             if (accessToken.length > 0) accessToken += '_';
             accessToken += newToken;
-            await updateAccessToken(user, accessToken);
+            await updateAccessToken(username, accessToken);
             return ['OK', newToken];
         }
         else {
@@ -167,8 +243,34 @@ exports.validateLogin = async function(user, pass){
     }
 }
 
-exports.getInboxData = () => {
+exports.getInboxData = async (request) => {
+    const username = exports.parseCookie(request.cookies)[0];
+    const data = await getDataViaUsernameAndTypeOfWorks(username, 'inbox');
 
-    return {title: 'Inbox', content: '1'};
+    return data;
+}
 
+exports.addInboxWork = async (request, inboxWork) => {
+    if (!isProperStringWithSomeSpecialCharacter(inboxWork)){
+        return 'Invalid';
+    }
+    else {
+        const username = exports.parseCookie(request.cookies)[0];
+        const addStatus = await addInboxWorkForUser(username, inboxWork);
+        return addStatus;
+    }
+}
+
+exports.doneInboxWork = async (request, inboxWork) => {
+	const username = exports.parseCookie(request.cookies)[0];
+	const doneStatus = await doneInboxWorkForUser(username, inboxWork);
+
+	return doneStatus;
+}
+
+exports.deleteInboxWork = async (request, inboxWork) => {
+	const username = exports.parseCookie(request.cookies)[0];
+	const deleteStatus = await deleteInboxWorkForUser(username, inboxWork);
+
+	return deleteStatus;
 }

@@ -37,7 +37,6 @@ function signUpPageProcessing(app){
     });
 
     app.post('/signup', async function (req, res, next) {
-
         let user = req.body.username;
         let email = req.body.email;
         let pass = req.body.password;
@@ -62,7 +61,6 @@ function signUpPageProcessing(app){
 
             res.render(VIEWS_PATH + 'signup', signInUpRequestData);
         }
-
     });
 }
 
@@ -81,7 +79,6 @@ function signInPageProcessing(app){
     });
 
     app.post('/signin', async (req, res) => {
-
         let username = req.body.username;
         let password = req.body.password;
 
@@ -116,21 +113,61 @@ function dashBoardProcessing(app){
         }
     });
 
+    // Inbox
+    app.post('/dashboard/inbox', async (req, res) => {
+        const inboxWork = req.body.inbox;
+        const message = await model.addInboxWork(req, inboxWork);
+        if (message === 'OK'){
+            const renderRes = await renderer.render('btnInbox', req);
+            res.status(200).send(renderRes);
+        }
+        else {
+            res.status(200).send({content: message});
+        }
+    });
+
+    app.post('/dashboard/inbox/done', async (req, res) => {
+        const inboxWork = req.body.name;
+        const message = await model.doneInboxWork(req, inboxWork);
+        if (message === 'OK'){
+            const renderRes = await renderer.render('btnInbox', req);
+            res.status(200).send(renderRes);
+        }
+        else res.status(200).send({content: message});
+    });
+
+    app.post('/dashboard/inbox/delete', async (req, res) => {
+        const inboxWork = req.body.name;
+        const message = await model.deleteInboxWork(req, inboxWork);
+        if (message === 'OK'){
+            const renderRes = await renderer.render('btnInbox', req);
+            res.status(200).send(renderRes);
+        }
+        else res.status(200).send({content: message});
+    });
+
     app.get('/dashboard', async (req, res) => {
         let checkCookie = await checkCookieForLogIn(req.cookies);
         if (!checkCookie){
             res.status(200).redirect('/signin');
         }
         else {
-            requestData = renderer.render('btnHome');
+            const requestData = await renderer.render('btnHome', req);
             requestData.title = `Hi ${model.parseCookie(req.cookies)[0]}, may I help you?`;
             res.status(200).render(VIEWS_PATH + 'dashboard', requestData);
         }
     });
 
     app.post('/dashboard', async (req, res) => {
-        let btnClicked = req.body.btnClicked;
-        res.status(200).send(renderer.render(btnClicked));
+        let checkCookie = await checkCookieForLogIn(req.cookies);
+        if (!checkCookie){
+            res.status(200).redirect('/signin');
+        }
+        else {
+            let btnClicked = req.body.btnClicked;
+            const renderRes = await renderer.render(btnClicked, req);
+            res.status(200).send(renderRes);
+        }
     });
 }
 

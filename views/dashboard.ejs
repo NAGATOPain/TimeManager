@@ -10,7 +10,7 @@
         <div class="container-fluid">
             <div class="row">
                 <div class="col-sm-2 sidebar text-center">
-                    <div id="header" class="row sidebar-header text-center">
+                    <div id="header" class="row sidebar-header text-center align-items-center">
                         <div class="col-sm p-4">
                             <img class="w-50" src="img/calendar.png" alt="">
                         </div>
@@ -21,7 +21,7 @@
                         </div>
                     </div>
                     <% sidebarComponent.forEach(function(element){ %>
-                        <div id="<%= element.id %>" class="row sidebar-component mt-2">
+                        <div id="<%= element.id %>" class="row sidebar-component mt-2 align-items-center">
                             <div class="col-sm-3 pt-2 pb-2">
                                 <img class="w-100" src="<%= element.icon %>" alt="">
                             </div>
@@ -32,8 +32,8 @@
                     <% }); %>
                 </div>
                 <div class="col-sm ">
-                    <div class="row topnavbar">
-                        <div class="col text-left p-2">
+                    <div class="row topnavbar align-items-center">
+                        <div class="col text-left p-2 ">
                             <h4 id="title">
                                 <%- title%>
                             </h4>

@@ -15,6 +15,7 @@ app.use('/css', express.static(__dirname + '/views/css'));
 app.use('/js', express.static(__dirname + '/views/js'));
 app.use('/plugins', express.static(__dirname + '/views/plugins'))
 app.use('/img', express.static(__dirname + '/views/img'));
+app.use('/webfonts', express.static(__dirname + '/views/img/webfonts'));
 
 const model = require(constants.MODEL_PATH);
 model.init();

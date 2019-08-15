@@ -40,6 +40,14 @@
     color: #fff;
 }
 
+.list-group{
+    overflow-y: auto;
+}
+
+.fill-viewport-height-2{
+    height: 70vh;
+}
+
 #content{
     width: 100%;
 }

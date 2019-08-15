@@ -7,14 +7,14 @@ function btnHeaderClick(){
 function sideButtonClick(btnName){
     $('.sidebar-component').css('background', '#18344d');
     $(`#${btnName}`).css('background', '#5dc27b');
-    $.post('/dashboard', {btnClicked: btnName}, function (data, status, jqXHR){
+    $.post('/dashboard', {btnClicked: btnName})
+    .done(function(data){
         $('#title').text(data.title);
         $('#content').html(data.content);
-    }).done(function(){
-
-    }).fail(function(jqxhr, settings, ex){
-        console.log(`Failed ${ex}`);
     });
+}
+
+function inboxSubmitButtonClick(inboxWork){
 }
 
 $(document).ready(function(){
