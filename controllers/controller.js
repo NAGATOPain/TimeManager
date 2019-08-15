@@ -116,7 +116,9 @@ function dashBoardProcessing(app){
     // Inbox
     app.post('/dashboard/inbox', async (req, res) => {
         const inboxWork = req.body.inbox;
-        const message = await model.addInboxWork(req, inboxWork);
+        const fromTime = req.body.fromTime;
+        const toTime = req.body.toTime;
+        const message = await model.addInboxWork(req, inboxWork, fromTime, toTime);
         if (message === 'OK'){
             const renderRes = await renderer.render('btnInbox', req);
             res.status(200).send(renderRes);

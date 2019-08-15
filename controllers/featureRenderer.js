@@ -1,7 +1,7 @@
 const model = require('../models/model.js');
 const enviroment = require('../env.js');
 
-function renderHomeFeature(request){
+async function renderHomeFeature(request){
     const sidebarComponents = [
         { 'id': 'btnInbox', 'icon': '/img/inbox.png', 'text': 'Inbox'},
         { 'id': 'btnBooks', 'icon': '/img/book.png', 'text': 'Books'},
@@ -23,6 +23,8 @@ function renderHomeFeature(request){
         selectable: true,
         events: []
     };
+
+    calendarProperties.events = await model.getCalendarData(request);
 
     const calendarScript = `
     <script>
@@ -49,17 +51,30 @@ async function renderInboxFeature(request){
         title: 'Inbox',
         content: ''
     };
-    returnData.content = `<div class="form-group">
-        <input class="form-control" id="inbox" placeholder="What would you do ?">
-        <div id="inboxAlert" class="d-none form-group alert alert-danger alert-dismissible fade show"></div>
+    returnData.content = `
+    <div class="row mb-3">
+        <div class="col">
+            <input class="form-control" id="inbox" placeholder="What would you do ?">
+        </div>
+        <div class="col">
+            <div class="d-flex flex-row align-items-center">
+                <div class="mr-3 ml-3"> From </div>
+                <input class="form-control" type="datetime-local" id="from_time">
+                <div class="mr-3 ml-3"> To </div>
+                <input class="form-control" type="datetime-local" id="to_time">
+            </div>
+        </div>
     </div>
+    <div id="inboxAlert" class="d-none form-group alert alert-danger alert-dismissible fade show"></div>
     <script>
     $('#inbox').keypress((event) => {
         const keycode = (event.keyCode ? event.keyCode : event.which);
         if (keycode == '13'){
             $('#inbox').attr("disable", "disable");
             let inboxWork = $('#inbox').val();
-            $.post('/dashboard/inbox', {inbox: inboxWork})
+            let fromTime = $('#from_time').val();
+            let toTime = $('#to_time').val();
+            $.post('/dashboard/inbox', {inbox: inboxWork, fromTime: fromTime, toTime: toTime})
             .done((data) => {
                 if (data.content === 'Error'){
                     $("#inboxAlert").toggleClass("d-none d-block");
@@ -67,7 +82,7 @@ async function renderInboxFeature(request){
                 }
                 else if (data.content === 'Invalid'){
                     $("#inboxAlert").toggleClass("d-none d-block");
-                    $("#inboxAlert").text("Your input must be [A-Z][a-z][0-9]-.,?() and spaces!");
+                    $("#inboxAlert").text("Your input must be [A-Z][a-z][0-9]-.,?() and spaces, and at least 2 charaters!");
                 }
                 else {
                     $("#inboxAlert").toggleClass("d-block d-none");

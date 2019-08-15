@@ -21,7 +21,7 @@ function isProperString(str){
 }
 
 function isProperStringWithSomeSpecialCharacter(str){
-	return /^(\w[\w-\s.,?()]+)$/.test(str);
+	return /^(\w[\w-\s.,'"?()]+)$/.test(str);
 }
 
 // Hashing
@@ -94,12 +94,20 @@ function getDataViaUsernameAndTypeOfWorks(username, type){
     });
 }
 
-function addInboxWorkForUser(username, inboxWork){
+function addInboxWorkForUser(username, inboxWork, fromTime, toTime){
     return new Promise((resolve, reject) => {
         const sql = `INSERT INTO works VALUES (?, ?, ?, ?, ?, ?);`;
-        let currentDate = new Date();
-        currentDate = currentDate.toJSON();
-        db.run(sql, [username, inboxWork, 'inbox', currentDate, currentDate, 0], (err) => {
+		let from_t, to_t;
+
+		if (fromTime === "" || fromTime === undefined) from_t = (new Date()).toJSON();
+		else from_t = fromTime;
+
+		if (toTime === "" || toTime === undefined) to_t = (new Date()).toJSON();
+		else to_t = toTime;
+
+		if (Date.parse(from_t) > Date.parse(to_t)) to_t = from_t;
+
+        db.run(sql, [username, inboxWork, 'inbox', from_t, to_t, 0], (err) => {
             if (err) {
                 resolve('Error');
             }
@@ -243,20 +251,34 @@ exports.validateLogin = async function(username, password){
     }
 }
 
+exports.getCalendarData = async (request) => {
+	const username = exports.parseCookie(request.cookies)[0];
+	let result = [];
+
+	// Get all inbox works
+	const inboxData = await getDataViaUsernameAndTypeOfWorks(username, 'inbox');
+	inboxData.forEach((item) => {
+		result.push({title: item.name, start: item.from_t, end: item.to_t, color: '#42a7f5'});
+	});
+
+	return result;
+}
+
+// Inbox
+
 exports.getInboxData = async (request) => {
     const username = exports.parseCookie(request.cookies)[0];
     const data = await getDataViaUsernameAndTypeOfWorks(username, 'inbox');
-
     return data;
 }
 
-exports.addInboxWork = async (request, inboxWork) => {
+exports.addInboxWork = async (request, inboxWork, fromTime, toTime) => {
     if (!isProperStringWithSomeSpecialCharacter(inboxWork)){
         return 'Invalid';
     }
     else {
         const username = exports.parseCookie(request.cookies)[0];
-        const addStatus = await addInboxWorkForUser(username, inboxWork);
+        const addStatus = await addInboxWorkForUser(username, inboxWork, fromTime, toTime);
         return addStatus;
     }
 }
