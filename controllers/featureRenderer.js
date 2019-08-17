@@ -20,7 +20,7 @@ async function renderHomeFeature(request){
             center: 'title',
             right: 'prev, today, next'
         },
-        selectable: true,
+        eventLimit: true,
         events: []
     };
 
@@ -47,10 +47,7 @@ async function renderHomeFeature(request){
 }
 
 async function renderInboxFeature(request){
-    let returnData = {
-        title: 'Inbox',
-        content: ''
-    };
+    let returnData = { title: 'Inbox', content: '' };
     returnData.content = `
     <div class="row mb-3">
         <div class="col">
@@ -67,29 +64,44 @@ async function renderInboxFeature(request){
     </div>
     <div id="inboxAlert" class="d-none form-group alert alert-danger alert-dismissible fade show"></div>
     <script>
+    function submitForm(){
+        $('#inbox').attr("disable", "disable");
+        let inboxWork = $('#inbox').val();
+        let fromTime = $('#from_time').val();
+        let toTime = $('#to_time').val();
+        $.post('/dashboard/inbox', {inbox: inboxWork, fromTime: fromTime, toTime: toTime})
+        .done((data) => {
+            if (data.content === 'Error'){
+                $("#inboxAlert").toggleClass("d-none d-block");
+                $("#inboxAlert").text("Some errors have occured !");
+            }
+            else if (data.content === 'Invalid'){
+                $("#inboxAlert").toggleClass("d-none d-block");
+                $("#inboxAlert").text("Your input must be [A-Z][a-z][0-9]-.,?() and spaces, and at least 2 charaters!");
+            }
+            else {
+                $("#inboxAlert").toggleClass("d-block d-none");
+                $('#content').html(data.content);
+            }
+        });
+        $('#inbox').removeAttr("disable");
+    }
     $('#inbox').keypress((event) => {
         const keycode = (event.keyCode ? event.keyCode : event.which);
         if (keycode == '13'){
-            $('#inbox').attr("disable", "disable");
-            let inboxWork = $('#inbox').val();
-            let fromTime = $('#from_time').val();
-            let toTime = $('#to_time').val();
-            $.post('/dashboard/inbox', {inbox: inboxWork, fromTime: fromTime, toTime: toTime})
-            .done((data) => {
-                if (data.content === 'Error'){
-                    $("#inboxAlert").toggleClass("d-none d-block");
-                    $("#inboxAlert").text("Some errors have occured !");
-                }
-                else if (data.content === 'Invalid'){
-                    $("#inboxAlert").toggleClass("d-none d-block");
-                    $("#inboxAlert").text("Your input must be [A-Z][a-z][0-9]-.,?() and spaces, and at least 2 charaters!");
-                }
-                else {
-                    $("#inboxAlert").toggleClass("d-block d-none");
-                    $('#content').html(data.content);
-                }
-            });
-            $('#inbox').removeAttr("disable");
+            submitForm();
+        }
+    });
+    $('#from_time').keypress((event) => {
+        const keycode = (event.keyCode ? event.keyCode : event.which);
+        if (keycode == '13'){
+            submitForm();
+        }
+    });
+    $('#to_time').keypress((event) => {
+        const keycode = (event.keyCode ? event.keyCode : event.which);
+        if (keycode == '13'){
+            submitForm();
         }
     });
     </script>
@@ -111,26 +123,30 @@ async function renderInboxFeature(request){
                         <button type="button" id="button-${index}-1" class="btn btn-info mr-2 float-right"><i class="fas fa-check"></i></button>
                         <script>
                             $("#button-${index}-1").click(() => {
-                                $.post('/dashboard/inbox/done', {name: $("#label-${index}").text()})
+                                const workText = $("#label-${index}").text();
+                                $.post('/dashboard/inbox/done', {name: workText})
                                 .done((data) => {
                                     if (data.content === 'Error'){
                                         $("#inboxAlert").toggleClass("d-none d-block");
                                         $("#inboxAlert").text("Some errors have occured !");
                                     }
                                     else {
+                                        bootbox.alert("You've done " + workText + ". Good jobs!");
                                         $("#inboxAlert").toggleClass("d-block d-none");
                                         $('#content').html(data.content);
                                     }
                                 });
                             });
                             $("#button-${index}-2").click(() => {
-                                $.post('/dashboard/inbox/delete', {name: $("#label-${index}").text()})
+                                const workText = $("#label-${index}").text();
+                                $.post('/dashboard/inbox/delete', {name: workText})
                                 .done((data) => {
                                     if (data.content === 'Error'){
                                         $("#inboxAlert").toggleClass("d-none d-block");
                                         $("#inboxAlert").text("Some errors have occured !");
                                     }
                                     else {
+                                        bootbox.alert("You deleted " + workText);
                                         $("#inboxAlert").toggleClass("d-block d-none");
                                         $('#content').html(data.content);
                                     }
@@ -155,7 +171,71 @@ async function renderProjectFeature(request){
 }
 
 async function renderDailyFeature(request){
-    return {title: 'Daily Works', content: '4'};
+
+    let returnData = { title: 'Daily Works', content: '' };
+    returnData.content += `<div id='calendar'></div>
+    <script>
+        var calendarEl = document.getElementById('calendar');
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            height: 'parent',
+            themeSystem: 'bootstrap',
+            plugins: ['interaction', 'dayGrid'],
+            defaultView: 'dayGridWeek',
+            header: {
+                left: 'title',
+                center: 'addNewDaily',
+                right: 'prev, today, next'
+            },
+
+            customButtons: {
+                addNewDaily: { text: 'add event',
+                click: function(){
+                        let dialog = bootbox.dialog({
+                            title: 'Add new event',
+                            size: 'large',
+                            message: \`
+                            <div class="d-flex flex-row align-items-center">
+                                <input class="form-control m-2" id="inbox" placeholder="What would you do ?">
+                                <input class="form-control m-2" type="time" id="from_time">
+                                <input class="form-control m-2" type="time" id="to_time">
+                            </div>
+                            <div class="d-flex flex-row align-items-center">
+                                <label class="m-2"><input class="m-1" type="checkbox" value="">Mon</label>
+                                <label class="m-2"><input class="m-1" type="checkbox" value="">Tue</label>
+                                <label class="m-2"><input class="m-1" type="checkbox" value="">Wed</label>
+                                <label class="m-2"><input class="m-1" type="checkbox" value="">Thu</label>
+                                <label class="m-2"><input class="m-1" type="checkbox" value="">Fri</label>
+                                <label class="m-2"><input class="m-1" type="checkbox" value="">Sat</label>
+                                <label class="m-2"><input class="m-1" type="checkbox" value="">Sun</label>
+                            </div>
+                            \`,
+                            buttons: {
+                                ok: {
+                                    label: 'OK',
+                                    className: 'btn-info',
+                                    callback: function(){
+                                        console.log("OK DUDE");
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }
+            },
+
+            eventLimit: true,
+            weekNumbers: true,
+            events: ${JSON.stringify(await model.getDailyData(request))},
+
+            editable: true,
+            eventDrop: function(info){
+
+            }
+        });
+        calendar.render();
+    </script>`;
+
+    return returnData;
 }
 
 async function renderMoneyFeature(request){

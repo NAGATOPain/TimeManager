@@ -213,11 +213,11 @@ exports.createAccount = async function(email, username, password){
     return new Promise((resolve, reject) => {
         // Check email, user, pass here
 
-        if (!isEmail.test(email))
+        if (!isEmail(email))
             resolve('Email');
-        else if (!isProperString.test(username))
+        else if (!isProperString(username))
             resolve('Username');
-        else if (!isProperString.test(password))
+        else if (!isProperString(password))
             resolve('Password');
         else {
             db.run(`INSERT INTO user VALUES (?, ?, ?, ?);`, ['', email, username, hash], (err, result) => {
@@ -295,4 +295,10 @@ exports.deleteInboxWork = async (request, inboxWork) => {
 	const deleteStatus = await deleteInboxWorkForUser(username, inboxWork);
 
 	return deleteStatus;
+}
+
+// Daily
+
+exports.getDailyData = async (request) => {
+	return [{title: 'Hello', start: '2019-08-17T11:19:07.599Z', end: '2019-08-17T11:19:07.599Z'}];
 }
