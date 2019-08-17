@@ -79,11 +79,11 @@ function getHashedPassword(username){
     });
 }
 
-function getDataViaUsernameAndTypeOfWorks(username, type){
+function getInboxDataOfUser(username){
 
     return new Promise((resolve, reject) => {
-        const sql = `SELECT _rowid_, * FROM 'works' WHERE user = ? AND type = ? AND done = ? ORDER BY _rowid_ DESC`;
-        db.all(sql, [username, type, 0], (err, rows) => {
+        const sql = `SELECT _rowid_, * FROM inbox WHERE user = ? AND done = ? ORDER BY _rowid_ DESC`;
+        db.all(sql, [username, 0], (err, rows) => {
             if (err || rows === undefined){
                 resolve(undefined);
             }
@@ -96,7 +96,7 @@ function getDataViaUsernameAndTypeOfWorks(username, type){
 
 function addInboxWorkForUser(username, inboxWork, fromTime, toTime){
     return new Promise((resolve, reject) => {
-        const sql = `INSERT INTO works VALUES (?, ?, ?, ?, ?, ?);`;
+        const sql = `INSERT INTO inbox VALUES (?, ?, ?, ?, ?);`;
 		let from_t, to_t;
 
 		if (fromTime === "" || fromTime === undefined) from_t = (new Date()).toJSON();
@@ -107,7 +107,7 @@ function addInboxWorkForUser(username, inboxWork, fromTime, toTime){
 
 		if (Date.parse(from_t) > Date.parse(to_t)) to_t = from_t;
 
-        db.run(sql, [username, inboxWork, 'inbox', from_t, to_t, 0], (err) => {
+        db.run(sql, [username, inboxWork, from_t, to_t, 0], (err) => {
             if (err) {
                 resolve('Error');
             }
@@ -121,8 +121,8 @@ function addInboxWorkForUser(username, inboxWork, fromTime, toTime){
 function doneInboxWorkForUser(username, inboxWork){
 
 	return new Promise((resolve, reject) => {
-		const sql = `UPDATE works SET done = 1 WHERE user = ? AND name = ? AND type = ? ;`;
-		db.run(sql, [username, inboxWork, 'inbox'], (err) => {
+		const sql = `UPDATE inbox SET done = 1 WHERE user = ? AND name = ? ;`;
+		db.run(sql, [username, inboxWork], (err) => {
             if (err) {
                 resolve('Error');
             }
@@ -135,8 +135,8 @@ function doneInboxWorkForUser(username, inboxWork){
 
 function deleteInboxWorkForUser(username, inboxWork){
 	return new Promise((resolve, reject) => {
-		const sql = `DELETE FROM works WHERE user = ? AND name = ? AND type = ? ;`;
-		db.run(sql, [username, inboxWork, 'inbox'], (err) => {
+		const sql = `DELETE FROM inbox WHERE user = ? AND name = ? ;`;
+		db.run(sql, [username, inboxWork], (err) => {
             if (err) {
                 resolve('Error');
             }
@@ -199,8 +199,11 @@ exports.init = () => {
         if (!existsDatabase){
             console.log("Create database file !");
             db.run(`CREATE TABLE user (access_token TEXT, email TEXT, user TEXT PRIMARY KEY, pass TEXT);`);
-            db.run(`CREATE TABLE works (user TEXT, name TEXT, type TEXT, from_t TEXT, to_t TEXT, done INTEGER);`);
-            db.run(`CREATE TABLE money (user TEXT, money INTEGER, from_t TEXT, to_t TEXT);`)
+            db.run(`CREATE TABLE inbox (user TEXT, name TEXT, from_t TEXT, to_t TEXT, done INTEGER);`);
+			// db.run(`CREATE TABLE book (user TEXT, name TEXT, from_t TEXT, to_t TEXT, done INTEGER);`);
+			// db.run(`CREATE TABLE project (user TEXT, name TEXT, from_t TEXT, to_t TEXT, done INTEGER);`);
+			db.run(`CREATE TABLE daily (user TEXT, name TEXT, from_t TEXT, to_t TEXT, daily TEXT);`);
+            // db.run(`CREATE TABLE money (user TEXT, money INTEGER, from_t TEXT, to_t TEXT);`)
         }
         else {
             console.log("Exist file !");
@@ -256,7 +259,7 @@ exports.getCalendarData = async (request) => {
 	let result = [];
 
 	// Get all inbox works
-	const inboxData = await getDataViaUsernameAndTypeOfWorks(username, 'inbox');
+	const inboxData = await getInboxDataOfUser(username);
 	inboxData.forEach((item) => {
 		result.push({title: item.name, start: item.from_t, end: item.to_t, color: '#42a7f5'});
 	});
@@ -268,7 +271,7 @@ exports.getCalendarData = async (request) => {
 
 exports.getInboxData = async (request) => {
     const username = exports.parseCookie(request.cookies)[0];
-    const data = await getDataViaUsernameAndTypeOfWorks(username, 'inbox');
+    const data = await getInboxDataOfUser(username);
     return data;
 }
 
