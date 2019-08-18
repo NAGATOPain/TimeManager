@@ -255,17 +255,21 @@ async function renderDailyFeature(request){
             events: ${JSON.stringify(dailyData)},
             eventClick: function(info){
                 const eventName = info.event.title;
-                console.log(eventName);
-                $.post('/dashboard/daily/delete', {name: eventName})
-                .done((data) => {
-                    if (data.content === 'Error'){
-                        bootbox.alert("Some errors have occured!");
+                bootbox.confirm("Are you sure for deleting " + eventName + "?", function(result){
+                    if (result) {
+                        $.post('/dashboard/daily/delete', {name: eventName})
+                        .done((data) => {
+                            if (data.content === 'Error'){
+                                bootbox.alert("Some errors have occured!");
+                            }
+                            else {
+                                bootbox.alert("You've deleted " + eventName);
+                                $('#content').html(data.content);
+                            }
+                        });
                     }
-                    else {
-                        bootbox.alert("You've deleted " + eventName);
-                        $('#content').html(data.content);
-                    }
-                });
+                })
+
             }
         });
         calendar.render();

@@ -135,7 +135,7 @@ function doneInboxWorkForUser(username, inboxWork){
 
 function deleteInboxWorkForUser(username, inboxWork){
 	return new Promise((resolve, reject) => {
-		const sql = `DELETE FROM inbox WHERE user = ? AND name = ? ;`;
+		const sql = `DELETE FROM inbox WHERE user = ? AND name = ? AND done = 0 ;`;
 		db.run(sql, [username, inboxWork], (err) => {
             if (err) {
                 resolve('Error');
@@ -367,7 +367,7 @@ exports.getDailyData = async (request) => {
     dailyData.forEach((item, index) => {
         let daysOfWeek = [];
         for (let i in item.daily) if (item.daily[i] === '1') daysOfWeek.push(i);
-        data.push({title: item.name, startTime: item.from_t, endTime: item.to_t, daysOfWeek: daysOfWeek, color: "#42f55d"});
+        data.push({title: item.name, startTime: item.from_t, endTime: item.to_t, daysOfWeek: daysOfWeek, color: "#45fc03"});
     });
 
     return data;
