@@ -1,0 +1,8 @@
+[Desktop Entry]
+Version=1.0.0
+Name=Time Manager
+Comment=An app can help you control your time
+Type=Application
+Exec=/home/luu/Project/TimeManager/run.sh
+Icon=/home/luu/Project/TimeManager/views/img/logo.png
+Terminal=false
