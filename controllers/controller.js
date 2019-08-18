@@ -148,6 +148,31 @@ function dashBoardProcessing(app){
         else res.status(200).send({content: message});
     });
 
+    // Daily
+    app.post('/dashboard/daily/add', async (req, res) => {
+        const dailyWork = req.body.name;
+        const fromTime = req.body.from_time;
+        const toTime = req.body.to_time;
+        const dailyDays = req.body.daily_days;
+        const message = await model.addDailyWork(req, dailyWork, fromTime, toTime, dailyDays);
+        if (message === 'OK'){
+            const renderRes = await renderer.render('btnDaily', req);
+            res.status(200).send(renderRes);
+        }
+        else res.status(200).send({content: message});
+    });
+
+    app.post('/dashboard/daily/delete', async(req, res) => {
+        const dailyWork = req.body.name;
+        const message = await model.deleteDailyWork(req, dailyWork);
+        if (message === 'OK'){
+            const renderRes = await renderer.render('btnDaily', req);
+            res.status(200).send(renderRes);
+        }
+        else res.status(200).send({content: message});
+    });
+
+    // General
     app.get('/dashboard', async (req, res) => {
         let checkCookie = await checkCookieForLogIn(req.cookies);
         if (!checkCookie){

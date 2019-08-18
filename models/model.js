@@ -146,6 +146,59 @@ function deleteInboxWorkForUser(username, inboxWork){
         });
 	});
 }
+function addDailyWorkForUser(username, dailyWork, fromTime, toTime, dailyDays){
+	return new Promise((resolve, reject) => {
+		const sql = `INSERT INTO daily VALUES (?, ?, ?, ?, ?);`;
+
+		if (fromTime === "" || fromTime === undefined){
+			resolve('Invalid'); return;
+		}
+
+		if (toTime === "" || toTime === undefined){
+			resolve("Invalid"); return;
+		}
+
+		if (fromTime > toTime){
+			resolve("Invalid"); return;
+		}
+
+		let dailyDaysString = "";
+		for (let day of dailyDays)
+			dailyDaysString += (day === 'true' ? 1 : 0);
+
+        db.run(sql, [username, dailyWork, fromTime, toTime, dailyDaysString], (err) => {
+            if (err) resolve('Error');
+            else resolve('OK');
+        });
+	});
+}
+
+function getDailyDataForUser(username){
+	return new Promise((resolve, reject) => {
+        const sql = `SELECT * FROM daily WHERE user = ?`;
+        db.all(sql, [username], (err, rows) => {
+            if (err || rows === undefined){
+                resolve(undefined);
+            }
+            else {
+                resolve(rows);
+            }
+        });
+    });
+}
+function deleteDailyWorkForUser(username, dailyWork){
+	return new Promise((resolve, reject) => {
+		const sql = `DELETE FROM daily WHERE user = ? AND name = ? ;`;
+		db.run(sql, [username, dailyWork], (err) => {
+            if (err) {
+                resolve('Error');
+            }
+            else{
+                resolve('OK');
+            }
+        });
+	});
+}
 
 ////////////////////////
 
@@ -264,6 +317,10 @@ exports.getCalendarData = async (request) => {
 		result.push({title: item.name, start: item.from_t, end: item.to_t, color: '#42a7f5'});
 	});
 
+	// Get all daily data
+	const dailyData = await exports.getDailyData(request);
+	result = result.concat(dailyData);
+
 	return result;
 }
 
@@ -303,5 +360,32 @@ exports.deleteInboxWork = async (request, inboxWork) => {
 // Daily
 
 exports.getDailyData = async (request) => {
-	return [{title: 'Hello', start: '2019-08-17T11:19:07.599Z', end: '2019-08-17T11:19:07.599Z'}];
+	const username = exports.parseCookie(request.cookies)[0];
+    const dailyData = await getDailyDataForUser(username);
+
+	let data = [];
+    dailyData.forEach((item, index) => {
+        let daysOfWeek = [];
+        for (let i in item.daily) if (item.daily[i] === '1') daysOfWeek.push(i);
+        data.push({title: item.name, startTime: item.from_t, endTime: item.to_t, daysOfWeek: daysOfWeek, color: "#42f55d"});
+    });
+
+    return data;
+}
+
+exports.addDailyWork = async (request, dailyWork, fromTime, toTime, dailyDays) => {
+	if (!isProperStringWithSomeSpecialCharacter(dailyWork)){
+        return 'Invalid';
+    }
+    else {
+        const username = exports.parseCookie(request.cookies)[0];
+        const addStatus = await addDailyWorkForUser(username, dailyWork, fromTime, toTime, dailyDays);
+        return addStatus;
+    }
+}
+
+exports.deleteDailyWork = async (request, dailyWork) => {
+	const username = exports.parseCookie(request.cookies)[0];
+	const deleteStatus = await deleteDailyWorkForUser(username, dailyWork);
+	return deleteStatus;
 }

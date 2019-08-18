@@ -172,6 +172,8 @@ async function renderProjectFeature(request){
 
 async function renderDailyFeature(request){
 
+    const dailyData = await model.getDailyData(request);
+
     let returnData = { title: 'Daily Works', content: '' };
     returnData.content += `<div id='calendar'></div>
     <script>
@@ -192,44 +194,78 @@ async function renderDailyFeature(request){
                 click: function(){
                         let dialog = bootbox.dialog({
                             title: 'Add new event',
-                            size: 'large',
                             message: \`
                             <div class="d-flex flex-row align-items-center">
-                                <input class="form-control m-2" id="inbox" placeholder="What would you do ?">
-                                <input class="form-control m-2" type="time" id="from_time">
-                                <input class="form-control m-2" type="time" id="to_time">
+                                <input class="form-control m-2" id="daily_name" placeholder="What would you do ?">
                             </div>
                             <div class="d-flex flex-row align-items-center">
-                                <label class="m-2"><input class="m-1" type="checkbox" value="">Mon</label>
-                                <label class="m-2"><input class="m-1" type="checkbox" value="">Tue</label>
-                                <label class="m-2"><input class="m-1" type="checkbox" value="">Wed</label>
-                                <label class="m-2"><input class="m-1" type="checkbox" value="">Thu</label>
-                                <label class="m-2"><input class="m-1" type="checkbox" value="">Fri</label>
-                                <label class="m-2"><input class="m-1" type="checkbox" value="">Sat</label>
-                                <label class="m-2"><input class="m-1" type="checkbox" value="">Sun</label>
+                                From <input class="form-control m-2" type="time" id="from_time">
+                                To <input class="form-control m-2" type="time" id="to_time">
                             </div>
+                            <div class="d-flex flex-row align-items-center">
+                                <label class="m-2"><input id="checkbox-1" class="m-1" type="checkbox">Mon</label>
+                                <label class="m-2"><input id="checkbox-2" class="m-1" type="checkbox">Tue</label>
+                                <label class="m-2"><input id="checkbox-3" class="m-1" type="checkbox">Wed</label>
+                                <label class="m-2"><input id="checkbox-4" class="m-1" type="checkbox">Thu</label>
+                                <label class="m-2"><input id="checkbox-5" class="m-1" type="checkbox">Fri</label>
+                                <label class="m-2"><input id="checkbox-6" class="m-1" type="checkbox">Sat</label>
+                                <label class="m-2"><input id="checkbox-0" class="m-1" type="checkbox">Sun</label>
+                            </div>
+                            <div id="dailyAlert" class="d-none form-group alert alert-danger alert-dismissible fade show"></div>
                             \`,
                             buttons: {
                                 ok: {
                                     label: 'OK',
                                     className: 'btn-info',
                                     callback: function(){
-                                        console.log("OK DUDE");
+                                        const dailyName = $("#daily_name").val();
+                                        const fromTime = $("#from_time").val();
+                                        const toTime = $("#to_time").val();
+                                        let dailyDays = [];
+                                        for (let i = 0; i < 7; ++i)
+                                            dailyDays.push($("#checkbox-" + i).is(':checked'));
+
+                                        $.post('/dashboard/daily/add', {name: dailyName, from_time: fromTime, to_time: toTime, daily_days: dailyDays})
+                                        .done((data) => {
+                                            if (data.content === 'Invalid'){
+                                                $("#dailyAlert").toggleClass("d-none d-block");
+                                                $("#dailyAlert").text("Your input is invalid !");
+                                            }
+                                            else if (data.content === 'Error'){
+                                                $("#dailyAlert").toggleClass("d-none d-block");
+                                                $("#dailyAlert").text("Some errors have occured !");
+                                            }
+                                            else {
+                                                bootbox.hideAll();
+                                                bootbox.alert("Successful");
+                                                $('#content').html(data.content);
+                                            }
+                                        });
+                                        return false;
                                     }
                                 }
                             }
-                        });
+                        });s
                     }
                 }
             },
 
             eventLimit: true,
             weekNumbers: true,
-            events: ${JSON.stringify(await model.getDailyData(request))},
-
-            editable: true,
-            eventDrop: function(info){
-
+            events: ${JSON.stringify(dailyData)},
+            eventClick: function(info){
+                const eventName = info.event.title;
+                console.log(eventName);
+                $.post('/dashboard/daily/delete', {name: eventName})
+                .done((data) => {
+                    if (data.content === 'Error'){
+                        bootbox.alert("Some errors have occured!");
+                    }
+                    else {
+                        bootbox.alert("You've deleted " + eventName);
+                        $('#content').html(data.content);
+                    }
+                });
             }
         });
         calendar.render();
