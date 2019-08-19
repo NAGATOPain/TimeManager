@@ -3,11 +3,11 @@ const enviroment = require('../env.js');
 
 async function renderHomeFeature(request){
     const sidebarComponents = [
-        { 'id': 'btnInbox', 'icon': '/img/inbox.png', 'text': 'Inbox'},
-        { 'id': 'btnBooks', 'icon': '/img/book.png', 'text': 'Books'},
-        { 'id': 'btnProject', 'icon': '/img/project.png', 'text': 'Projects'},
-        { 'id': 'btnDaily', 'icon': '/img/daily.png', 'text': 'Daily Works'},
-        { 'id': 'btnMoney', 'icon': '/img/money.png', 'text': 'Money'}
+        { 'id': 'btnInbox', 'icon': '/img/inbox.png'},
+        { 'id': 'btnBooks', 'icon': '/img/book.png'},
+        { 'id': 'btnProject', 'icon': '/img/project.png'},
+        { 'id': 'btnDaily', 'icon': '/img/daily.png'},
+        { 'id': 'btnMoney', 'icon': '/img/money.png'}
     ];
 
     const calendarProperties = {
