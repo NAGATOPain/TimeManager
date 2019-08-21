@@ -18,6 +18,10 @@ function isDate(date) {
     return (new Date(date) !== "Invalid Date") && !isNaN(new Date(date));
 }
 
+function changeToCurrencyFormat(num){
+    return (num).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+}
+
 function isProperString(str){
 	// Only contains alphanumeric, _, -
 	return /^([\w-]+)$/.test(str);
@@ -25,6 +29,10 @@ function isProperString(str){
 
 function isProperStringWithSomeSpecialCharacter(str){
 	return /^(\w[\w-\s.,'"?()]+)$/.test(str);
+}
+
+function getCurrentDateInYYYYMMDDFormat(){
+    return (new Date()).toISOString().split('T')[0];
 }
 
 // Hashing
@@ -205,12 +213,11 @@ function deleteDailyWorkForUser(username, dailyWork){
 
 // Money
 
-function addMoneyForUser(username, moneyName, money, time){
+function addMoneyForUser(username, moneyName, money){
 	return new Promise((resolve, reject) => {
-		const sql = `INSERT INTO money VALUES (?, ?, ?, ?)`;
-		if (time === '' || time === undefined){
-			time = (new Date()).toJSON();
-		}
+        const sql = `INSERT INTO money VALUES (?, ?, ?, ?)`;
+        
+        const time = getCurrentDateInYYYYMMDDFormat();
 
 		if (money === "" || money === undefined || isNaN(money) || !isDate(time)){
 			resolve('Invalid'); return;
@@ -225,7 +232,7 @@ function addMoneyForUser(username, moneyName, money, time){
 
 function getMoneyDataForUser(username){
 	return new Promise((resolve, reject) => {
-        const sql = `SELECT * FROM money WHERE user = ?`;
+        const sql = `SELECT moneyName, money FROM money WHERE user = ?`;
         db.all(sql, [username], (err, rows) => {
             if (err || rows === undefined){
                 resolve(undefined);
@@ -429,13 +436,13 @@ exports.deleteDailyWork = async (request, dailyWork) => {
 
 // Money
 
-exports.addMoney = async (request, moneyName, money, time) => {
+exports.addMoney = async (request, moneyName, money) => {
 	if (!isProperStringWithSomeSpecialCharacter(moneyName)){
 		return 'Invalid';
 	}
 	else {
 		const username = exports.parseCookie(request.cookies)[0];
-		const addStatus = await addMoneyForUser(username, moneyName, money, time);
+		const addStatus = await addMoneyForUser(username, moneyName, money);
 		return addStatus;
 	}
 }
@@ -444,5 +451,22 @@ exports.getMoneyData = async (request) => {
 	const username = exports.parseCookie(request.cookies)[0];
     const moneyData = await getMoneyDataForUser(username);
 
+    moneyData.forEach((value) => {
+        value.money = changeToCurrencyFormat(value.money)
+    });
+
 	return moneyData;
+}
+
+exports.getMoneySum = async (request) => {
+    const username = exports.parseCookie(request.cookies)[0];
+    const moneyData = await getMoneyDataForUser(username);
+
+    let sum = 0;
+
+    moneyData.forEach((value) => {
+        sum += value.money;
+    });
+
+    return changeToCurrencyFormat(sum);
 }

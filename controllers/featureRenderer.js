@@ -280,6 +280,7 @@ async function renderDailyFeature(request){
 
 async function renderMoneyFeature(request){
     const moneyData = await model.getMoneyData(request);
+    const moneySum = await model.getMoneySum(request);
 
     let returnData = { title: 'Money', content: '' };
 
@@ -288,10 +289,7 @@ async function renderMoneyFeature(request){
             <input class="form-control" id="moneyName" placeholder="What has you bought ?">
         </div>
         <div class="col">
-            <div class="d-flex flex-row align-items-center">
-                <input class="form-control ml-2" id="money" placeholder="3000">
-                <input class="form-control ml-2" type="date" id="time">
-            </div>
+            <input class="form-control ml-2" id="money" placeholder="3000">
         </div>
     </div>
     <div id="moneyAlert" class="d-none form-group alert alert-danger alert-dismissible fade show"></div>
@@ -300,8 +298,7 @@ async function renderMoneyFeature(request){
         $('#moneyName').attr("disable", "disable");
         let moneyName = $('#moneyName').val();
         let money = $('#money').val();
-        let date = $('#time').val();
-        $.post('/dashboard/money/add', {name: moneyName, money: money, time: date})
+        $.post('/dashboard/money/add', {name: moneyName, money: money})
         .done((data) => {
             if (data.content === 'Error'){
                 $("#moneyAlert").toggleClass("d-none d-block");
@@ -336,9 +333,30 @@ async function renderMoneyFeature(request){
             submitForm();
         }
     });
-    </script>`;
+    </script>
+    <table class="table table-sm table-bordered">
+    <thead class="thead-dark">
+    <tr>
+      <th scope="col">#</th>
+      <th scope="col">Product</th>
+      <th scope="col">Cost</th>
+    </tr>
+    </thead><tbody>
+    `;
 
-    returnData.content += JSON.stringify(moneyData);
+    moneyData.forEach((value, index) => {
+        returnData.content += `<tr class="${parseFloat(value.money) >= 0 ? "table-success" : "table-danger"}">
+            <th scope="row">${index + 1}</th>
+            <td>${value.moneyName}</td>
+            <td>${value.money}</td></tr>
+        `;
+    });
+
+    returnData.content += `
+    <tr class="${parseFloat(moneySum) >= 0 ? "table-success" : "table-danger"}">
+        <td class="text-center" colspan="3"><b>Your currency: </b> ${moneySum}</td>
+    </tr>
+    </tbody></table>`;
 
     return returnData;
 }

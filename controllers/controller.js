@@ -177,8 +177,7 @@ function dashBoardProcessing(app){
     app.post('/dashboard/money/add', async (req, res) => {
         const moneyName = req.body.name;
         const money = req.body.money;
-        const time = req.body.time;
-        const message = await model.addMoney(req, moneyName, money, time);
+        const message = await model.addMoney(req, moneyName, money);
         if (message === 'OK'){
             const renderRes = await renderer.render('btnMoney', req);
             res.status(200).send(renderRes);
