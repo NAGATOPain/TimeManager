@@ -14,6 +14,9 @@ function isEmail(email){
 	return /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/g.test(email);
 }
 
+function isDate(date) {
+    return (new Date(date) !== "Invalid Date") && !isNaN(new Date(date));
+}
 
 function isProperString(str){
 	// Only contains alphanumeric, _, -
@@ -200,6 +203,40 @@ function deleteDailyWorkForUser(username, dailyWork){
 	});
 }
 
+// Money
+
+function addMoneyForUser(username, moneyName, money, time){
+	return new Promise((resolve, reject) => {
+		const sql = `INSERT INTO money VALUES (?, ?, ?, ?)`;
+		if (time === '' || time === undefined){
+			time = (new Date()).toJSON();
+		}
+
+		if (money === "" || money === undefined || isNaN(money) || !isDate(time)){
+			resolve('Invalid'); return;
+		}
+
+		db.run(sql, [username, moneyName, money, time], (err) => {
+			if (err) resolve('Error');
+			else resolve('OK');
+		});
+	});
+}
+
+function getMoneyDataForUser(username){
+	return new Promise((resolve, reject) => {
+        const sql = `SELECT * FROM money WHERE user = ?`;
+        db.all(sql, [username], (err, rows) => {
+            if (err || rows === undefined){
+                resolve(undefined);
+            }
+            else {
+                resolve(rows);
+            }
+        });
+    });
+}
+
 ////////////////////////
 
 exports.isLoggedIn = (username, token) => {
@@ -256,7 +293,7 @@ exports.init = () => {
 			// db.run(`CREATE TABLE book (user TEXT, name TEXT, from_t TEXT, to_t TEXT, done INTEGER);`);
 			// db.run(`CREATE TABLE project (user TEXT, name TEXT, from_t TEXT, to_t TEXT, done INTEGER);`);
 			db.run(`CREATE TABLE daily (user TEXT, name TEXT, from_t TEXT, to_t TEXT, daily TEXT);`);
-            // db.run(`CREATE TABLE money (user TEXT, money INTEGER, from_t TEXT, to_t TEXT);`)
+            db.run(`CREATE TABLE money (user TEXT, moneyName TEXT, money INTEGER, time TEXT);`)
         }
         else {
             console.log("Exist file !");
@@ -388,4 +425,24 @@ exports.deleteDailyWork = async (request, dailyWork) => {
 	const username = exports.parseCookie(request.cookies)[0];
 	const deleteStatus = await deleteDailyWorkForUser(username, dailyWork);
 	return deleteStatus;
+}
+
+// Money
+
+exports.addMoney = async (request, moneyName, money, time) => {
+	if (!isProperStringWithSomeSpecialCharacter(moneyName)){
+		return 'Invalid';
+	}
+	else {
+		const username = exports.parseCookie(request.cookies)[0];
+		const addStatus = await addMoneyForUser(username, moneyName, money, time);
+		return addStatus;
+	}
+}
+
+exports.getMoneyData = async (request) => {
+	const username = exports.parseCookie(request.cookies)[0];
+    const moneyData = await getMoneyDataForUser(username);
+
+	return moneyData;
 }

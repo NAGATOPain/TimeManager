@@ -2,6 +2,8 @@
 PORT=3000;
 
 cd ~/Project/TimeManager/ ;
+
+# Clean PORT
 fuser -k -n tcp $PORT ;
 
 if [[ $1 = 'reset' ]]; then

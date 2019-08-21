@@ -279,7 +279,68 @@ async function renderDailyFeature(request){
 }
 
 async function renderMoneyFeature(request){
-    return {title: 'Money', content: '5'};
+    const moneyData = await model.getMoneyData(request);
+
+    let returnData = { title: 'Money', content: '' };
+
+    returnData.content = `<div class="row mb-3">
+        <div class="col">
+            <input class="form-control" id="moneyName" placeholder="What has you bought ?">
+        </div>
+        <div class="col">
+            <div class="d-flex flex-row align-items-center">
+                <input class="form-control ml-2" id="money" placeholder="3000">
+                <input class="form-control ml-2" type="date" id="time">
+            </div>
+        </div>
+    </div>
+    <div id="moneyAlert" class="d-none form-group alert alert-danger alert-dismissible fade show"></div>
+    <script>
+    function submitForm(){
+        $('#moneyName').attr("disable", "disable");
+        let moneyName = $('#moneyName').val();
+        let money = $('#money').val();
+        let date = $('#time').val();
+        $.post('/dashboard/money/add', {name: moneyName, money: money, time: date})
+        .done((data) => {
+            if (data.content === 'Error'){
+                $("#moneyAlert").toggleClass("d-none d-block");
+                $("#moneyAlert").text("Some errors have occured !");
+            }
+            else if (data.content === 'Invalid'){
+                $("#moneyAlert").toggleClass("d-none d-block");
+                $("#moneyAlert").text("Your input is invalid. The name must be [A-Z][a-z][0-9]-.,?() and spaces, and at least 2 charaters!");
+            }
+            else {
+                $("#moneyAlert").toggleClass("d-block d-none");
+                $('#content').html(data.content);
+            }
+        });
+        $('#moneyName').removeAttr("disable");
+    }
+    $('#moneyName').keypress((event) => {
+        const keycode = (event.keyCode ? event.keyCode : event.which);
+        if (keycode == '13'){
+            submitForm();
+        }
+    });
+    $('#money').keypress((event) => {
+        const keycode = (event.keyCode ? event.keyCode : event.which);
+        if (keycode == '13'){
+            submitForm();
+        }
+    });
+    $('#time').keypress((event) => {
+        const keycode = (event.keyCode ? event.keyCode : event.which);
+        if (keycode == '13'){
+            submitForm();
+        }
+    });
+    </script>`;
+
+    returnData.content += JSON.stringify(moneyData);
+
+    return returnData;
 }
 
 async function renderScheduleFeature(request){
