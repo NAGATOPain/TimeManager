@@ -232,8 +232,8 @@ function addMoneyForUser(username, moneyName, money){
 
 function getMoneyDataForUser(username){
 	return new Promise((resolve, reject) => {
-        const sql = `SELECT moneyName, money FROM money WHERE user = ?`;
-        db.all(sql, [username], (err, rows) => {
+        const sql = `SELECT moneyName, money FROM money WHERE user = ? AND time = ? ORDER BY _rowid_ DESC;`;
+        db.all(sql, [username, getCurrentDateInYYYYMMDDFormat()], (err, rows) => {
             if (err || rows === undefined){
                 resolve(undefined);
             }

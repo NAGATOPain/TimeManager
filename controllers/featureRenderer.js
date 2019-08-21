@@ -284,7 +284,7 @@ async function renderMoneyFeature(request){
 
     let returnData = { title: 'Money', content: '' };
 
-    returnData.content = `<div class="row mb-3">
+    returnData.content = `<div class="row">
         <div class="col">
             <input class="form-control" id="moneyName" placeholder="What has you bought ?">
         </div>
@@ -334,7 +334,18 @@ async function renderMoneyFeature(request){
         }
     });
     </script>
-    <table class="table table-sm table-bordered">
+    <div class="row">
+        <button id="btn-all" type="button" class="btn btn-dark ml-3 mt-3 mb-2 mr-1">all</button>
+        <button id="btn-month" type="button" class="btn btn-dark mt-3 mb-2 mr-1">month</button>
+        <button id="btn-week" type="button" class="btn btn-dark mt-3 mb-2 mr-1">week</button>
+        <button id="btn-day" type="button" class="btn btn-dark mt-3 mb-2 mr-1">day</button>
+    </div>
+    <script>
+        $('#btn-all').click(function(){
+            
+        });
+    </script>
+    <table id="moneyTable" class="table table-bordered">
     <thead class="thead-dark">
     <tr>
       <th scope="col">#</th>
@@ -353,10 +364,22 @@ async function renderMoneyFeature(request){
     });
 
     returnData.content += `
-    <tr class="${parseFloat(moneySum) >= 0 ? "table-success" : "table-danger"}">
-        <td class="text-center" colspan="3"><b>Your currency: </b> ${moneySum}</td>
-    </tr>
-    </tbody></table>`;
+    </tbody>
+    <tfoot>
+        <tr>
+            <th scope="col"><b>Your currency</b></th>
+            <th colspan="2" scopre="col">${moneySum}</th>
+        </tr>
+    </tfoot>
+    </table>
+    <script>
+        $('#moneyTable').DataTable({
+            scrollY: '50vh',
+            scrollCollapse: true,
+            searching: false, paging: false, info: false
+        });
+        $('.dataTables_length').addClass('bs-select');
+    </script>`;
 
     return returnData;
 }
