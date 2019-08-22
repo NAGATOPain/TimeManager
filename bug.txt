@@ -3,3 +3,4 @@
 3. Username parsing from cookie bugs.
 4. Delete money element.
 5. Config inbox, daily data.
+6. Sync with Wunderlist.

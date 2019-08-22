@@ -69,7 +69,7 @@ async function renderInboxFeature(request){
         let inboxWork = $('#inbox').val();
         let fromTime = $('#from_time').val();
         let toTime = $('#to_time').val();
-        $.post('/dashboard/inbox', {inbox: inboxWork, fromTime: fromTime, toTime: toTime})
+        $.post('/dashboard/inbox/add', {inbox: inboxWork, fromTime: fromTime, toTime: toTime})
         .done((data) => {
             if (data.content === 'Error'){
                 $("#inboxAlert").toggleClass("d-none d-block");
@@ -337,12 +337,47 @@ async function renderMoneyFeature(request){
     <div class="row">
         <button id="btn-all" type="button" class="btn btn-dark ml-3 mt-3 mb-2 mr-1">all</button>
         <button id="btn-month" type="button" class="btn btn-dark mt-3 mb-2 mr-1">month</button>
-        <button id="btn-week" type="button" class="btn btn-dark mt-3 mb-2 mr-1">week</button>
-        <button id="btn-day" type="button" class="btn btn-dark mt-3 mb-2 mr-1">day</button>
+        <button id="btn-day" type="button" class="btn btn-dark mt-3 mb-2 mr-1">today</button>
     </div>
     <script>
         $('#btn-all').click(function(){
-            
+            $.post('/dashboard/money/render', {all: true, month: false, day: false})
+            .done((data) => {
+                if (data.content === 'Error'){
+                    $("#moneyAlert").toggleClass("d-none d-block");
+                    $("#moneyAlert").text("Some errors have occured !");
+                }
+                else {
+                    $("#moneyAlert").toggleClass("d-block d-none");
+                    $('#content').html(data.content);
+                }
+            });
+        });
+        $('#btn-month').click(function(){
+            $.post('/dashboard/money/render', {all: false, month: true, day: false})
+            .done((data) => {
+                if (data.content === 'Error'){
+                    $("#moneyAlert").toggleClass("d-none d-block");
+                    $("#moneyAlert").text("Some errors have occured !");
+                }
+                else {
+                    $("#moneyAlert").toggleClass("d-block d-none");
+                    $('#content').html(data.content);
+                }
+            });
+        });
+        $('#btn-day').click(function(){
+            $.post('/dashboard/money/render', {all: false, month: false, day: true})
+            .done((data) => {
+                if (data.content === 'Error'){
+                    $("#moneyAlert").toggleClass("d-none d-block");
+                    $("#moneyAlert").text("Some errors have occured !");
+                }
+                else {
+                    $("#moneyAlert").toggleClass("d-block d-none");
+                    $('#content').html(data.content);
+                }
+            });
         });
     </script>
     <table id="moneyTable" class="table table-bordered">

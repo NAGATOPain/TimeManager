@@ -114,7 +114,7 @@ function dashBoardProcessing(app){
     });
 
     // Inbox
-    app.post('/dashboard/inbox', async (req, res) => {
+    app.post('/dashboard/inbox/add', async (req, res) => {
         const inboxWork = req.body.inbox;
         const fromTime = req.body.fromTime;
         const toTime = req.body.toTime;
@@ -183,6 +183,11 @@ function dashBoardProcessing(app){
             res.status(200).send(renderRes);
         }
         else res.status(200).send({content: message});
+    });
+
+    app.post('/dashboard/money/render', async (req, res) => {
+        const renderRes = await renderer.render('btnMoney', req);
+        res.status(200).send(renderRes); 
     });
 
     // General

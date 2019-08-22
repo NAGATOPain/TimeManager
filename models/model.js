@@ -230,15 +230,30 @@ function addMoneyForUser(username, moneyName, money){
 	});
 }
 
-function getMoneyDataForUser(username){
+function getMoneyDataForUser(username, request){
 	return new Promise((resolve, reject) => {
-        const sql = `SELECT moneyName, money FROM money WHERE user = ? AND time = ? ORDER BY _rowid_ DESC;`;
-        db.all(sql, [username, getCurrentDateInYYYYMMDDFormat()], (err, rows) => {
+        const sql = `SELECT * FROM money WHERE user = ? ORDER BY _rowid_ DESC;`;
+        db.all(sql, [username], (err, rows) => {
             if (err || rows === undefined){
                 resolve(undefined);
             }
             else {
-                resolve(rows);
+                let result = [];
+                if (request.body.all === undefined || request.body.all === 'true'){
+                    result = rows;
+                }
+                else {
+                    const date = new Date();
+                    rows.forEach((value) => {
+                        const valueDateArray = value.time.split('-');
+                        if (request.body.month === 'true' && date.getFullYear() == valueDateArray[0] && date.getMonth() == valueDateArray[1] - 1)
+                            result.push(value);
+                        
+                        else if (request.body.day === 'true' && getCurrentDateInYYYYMMDDFormat() === value.time)
+                            result.push(value);
+                    });
+                }
+                resolve(result);
             }
         });
     });
@@ -449,7 +464,7 @@ exports.addMoney = async (request, moneyName, money) => {
 
 exports.getMoneyData = async (request) => {
 	const username = exports.parseCookie(request.cookies)[0];
-    const moneyData = await getMoneyDataForUser(username);
+    const moneyData = await getMoneyDataForUser(username, request);
 
     moneyData.forEach((value) => {
         value.money = changeToCurrencyFormat(value.money)
@@ -460,7 +475,7 @@ exports.getMoneyData = async (request) => {
 
 exports.getMoneySum = async (request) => {
     const username = exports.parseCookie(request.cookies)[0];
-    const moneyData = await getMoneyDataForUser(username);
+    const moneyData = await getMoneyDataForUser(username, request);
 
     let sum = 0;
 

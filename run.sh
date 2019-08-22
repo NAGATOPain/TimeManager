@@ -6,6 +6,8 @@ cd ~/Project/TimeManager/ ;
 # Clean PORT
 fuser -k -n tcp $PORT ;
 
+cp ./models/data.db backup.db ;
+
 if [[ $1 = 'reset' ]]; then
     rm -rf ./models/data.db;
 fi
