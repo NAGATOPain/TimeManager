@@ -4,3 +4,5 @@
 4. Delete money element.
 5. Config inbox, daily data.
 6. Sync with Wunderlist.
+7. Scoring.
+8. Change date in format to today.

@@ -163,11 +163,11 @@ async function renderInboxFeature(request){
 }
 
 async function renderBookFeature(request){
-    return {title: 'Books', content: '2'};
+    return {title: 'Books', content: 'This feature will release in the next version.'};
 }
 
 async function renderProjectFeature(request){
-    return {title: 'Projects', content: '3'};
+    return {title: 'Projects', content: 'This feature will release in the next version.'};
 }
 
 async function renderDailyFeature(request){
@@ -386,15 +386,17 @@ async function renderMoneyFeature(request){
       <th scope="col">#</th>
       <th scope="col">Product</th>
       <th scope="col">Cost</th>
+      <th scope="col">Date</th>
     </tr>
     </thead><tbody>
     `;
 
     moneyData.forEach((value, index) => {
         returnData.content += `<tr class="${parseFloat(value.money) >= 0 ? "table-success" : "table-danger"}">
-            <th scope="row">${index + 1}</th>
+            <th>${index + 1}</th>
             <td>${value.moneyName}</td>
-            <td>${value.money}</td></tr>
+            <td>${value.money}</td>
+            <td>${value.time}</td></tr>
         `;
     });
 
@@ -402,8 +404,9 @@ async function renderMoneyFeature(request){
     </tbody>
     <tfoot>
         <tr>
+            <th scope="col"></th>
             <th scope="col"><b>Your currency</b></th>
-            <th colspan="2" scopre="col">${moneySum}</th>
+            <th class="text-center" colspan="2" scope="col">${moneySum}</th>
         </tr>
     </tfoot>
     </table>
