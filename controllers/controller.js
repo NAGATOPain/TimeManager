@@ -162,6 +162,29 @@ function dashBoardProcessing(app){
         else res.status(200).send({content: message});
     });
 
+    app.post('/dashboard/daily/getdata', async (req, res) => {
+        const dailyWorkName = req.body.name;
+        const dailyWork = await model.getDailyWork(req, dailyWorkName);
+        if (dailyWork !== undefined && dailyWork !== ''){
+            res.status(200).send(dailyWork);
+        }
+        else res.status(200).send({content: 'Some errors have occcured!'});
+    });
+
+    app.post('/dashboard/daily/modify', async (req, res) => {
+        const oldName = req.body.oldName;
+        const newName = req.body.newName;
+        const fromTime = req.body.fromTime;
+        const toTime = req.body.toTime;
+        const dailyDays = req.body.dailyDays;
+        const message = await model.updateDailyWork(req, oldName, newName, fromTime, toTime, dailyDays);
+        if (message === 'OK'){
+            const renderRes = await renderer.render('btnDaily', req);
+            res.status(200).send(renderRes);
+        }
+        else res.status(200).send({content: message});
+    });
+
     app.post('/dashboard/daily/delete', async(req, res) => {
         const dailyWork = req.body.name;
         const message = await model.deleteDailyWork(req, dailyWork);

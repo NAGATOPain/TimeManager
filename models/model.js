@@ -184,6 +184,35 @@ function addDailyWorkForUser(username, dailyWork, fromTime, toTime, dailyDays){
 	});
 }
 
+function updateDailyWorkForUser(username, oldName, newName, fromTime, toTime, dailyDays){
+    return new Promise((resolve, reject) => {
+        const sql = `UPDATE daily SET 
+            name = ? , from_t = ? , to_t = ? , daily = ? 
+        WHERE user = ? AND name = ? ;`;
+
+		if (fromTime === "" || fromTime === undefined){
+			resolve('Invalid'); return;
+		}
+
+		if (toTime === "" || toTime === undefined){
+			resolve("Invalid"); return;
+		}
+
+		if (fromTime > toTime){
+			resolve("Invalid"); return;
+		}
+
+		let dailyDaysString = "";
+		for (let day of dailyDays)
+			dailyDaysString += (day === 'true' ? 1 : 0);
+
+        db.run(sql, [newName, fromTime, toTime, dailyDaysString, username, oldName], (err) => {
+            if (err) resolve('Error');
+            else resolve('OK');
+        });
+    });
+}
+
 function getDailyDataForUser(username){
 	return new Promise((resolve, reject) => {
         const sql = `SELECT * FROM daily WHERE user = ?`;
@@ -197,6 +226,20 @@ function getDailyDataForUser(username){
         });
     });
 }
+
+function getDailyWorkForUser(username, dailyWorkName){
+    return new Promise((resolve, reject) => {
+        const sql = `SELECT * FROM daily WHERE user = ? AND name = ? ;`;
+        db.get(sql, [username, dailyWorkName], (err, row) => {
+            if (err || row === undefined){
+                resolve(undefined);
+            }
+            else
+                resolve(row);
+        });
+    });
+}
+
 function deleteDailyWorkForUser(username, dailyWork){
 	return new Promise((resolve, reject) => {
 		const sql = `DELETE FROM daily WHERE user = ? AND name = ? ;`;
@@ -432,7 +475,26 @@ exports.getDailyData = async (request) => {
     return data;
 }
 
+exports.getDailyWork = async (request, dailyWorkName) => {
+    const username = exports.parseCookie(request.cookies)[0];
+    const dailyData = await getDailyWorkForUser(username, dailyWorkName);
+
+    return dailyData;
+}
+
+exports.updateDailyWork = async (request, oldName, newName, fromTime, toTime, dailyDays) => {
+    if (!isProperStringWithSomeSpecialCharacter(oldName) || !isProperStringWithSomeSpecialCharacter(newName)){
+        return 'Invalid';
+    }
+    else {
+        const username = exports.parseCookie(request.cookies)[0];
+        const updateStatus = await updateDailyWorkForUser(username, oldName, newName, fromTime, toTime, dailyDays);
+        return updateStatus;
+    }
+}
+
 exports.addDailyWork = async (request, dailyWork, fromTime, toTime, dailyDays) => {
+    console.log(request);
 	if (!isProperStringWithSomeSpecialCharacter(dailyWork)){
         return 'Invalid';
     }

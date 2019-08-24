@@ -177,102 +177,174 @@ async function renderDailyFeature(request){
     let returnData = { title: 'Daily Works', content: '' };
     returnData.content += `<div id='calendar'></div>
     <script>
-        var calendarEl = document.getElementById('calendar');
-        var calendar = new FullCalendar.Calendar(calendarEl, {
-            height: 'parent',
-            themeSystem: 'bootstrap',
-            plugins: ['interaction', 'dayGrid'],
-            defaultView: 'dayGridWeek',
-            header: {
-                left: 'title',
-                center: 'addNewDaily',
-                right: 'prev, today, next'
-            },
 
-            customButtons: {
-                addNewDaily: { text: 'add event',
+    function getDailyDialogBoxMessage(data){
+        return \`
+        <div class="d-flex flex-row align-items-center">
+            <input class="form-control m-2" id="daily_name" placeholder="What would you do ?" value="\$\{data.name\}">
+        </div>
+        <div class="d-flex flex-row align-items-center">
+            From <input class="form-control m-2" type="time" id="from_time" value="\$\{data.from_t\}">
+            To <input class="form-control m-2" type="time" id="to_time" value="\$\{data.to_t\}">
+        </div>
+        <div class="d-flex flex-row align-items-center">
+            <div class="custom-control custom-checkbox ">
+                <input id="checkbox-1" class="m-1 custom-control-input" type="checkbox" \$\{data.daily[1] === '1' ? 'checked' : ''\}>
+                <label class="m-2 custom-control-label" for="checkbox-1">Mon</label>
+            </div>
+            <div class="custom-control custom-checkbox ">
+                <input id="checkbox-2" class="m-1 custom-control-input" type="checkbox" \$\{data.daily[2] === '1' ? 'checked' : ''\}>
+                <label class="m-2 custom-control-label" for="checkbox-2">Tue</label>
+            </div>
+            <div class="custom-control custom-checkbox ">
+                <input id="checkbox-3" class="m-1 custom-control-input" type="checkbox" \$\{data.daily[3] === '1' ? 'checked' : ''\}>
+                <label class="m-2 custom-control-label" for="checkbox-3">Wed</label>
+            </div>
+            <div class="custom-control custom-checkbox ">
+                <input id="checkbox-4" class="m-1 custom-control-input" type="checkbox" \$\{data.daily[4] === '1' ? 'checked' : ''\}>
+                <label class="m-2 custom-control-label" for="checkbox-4">Thu</label>
+            </div>
+            <div class="custom-control custom-checkbox ">
+                <input id="checkbox-5" class="m-1 custom-control-input" type="checkbox" \$\{data.daily[5] === '1' ? 'checked' : ''\}>
+                <label class="m-2 custom-control-label" for="checkbox-5">Fri</label>
+            </div>
+            <div class="custom-control custom-checkbox ">
+                <input id="checkbox-6" class="m-1 custom-control-input" type="checkbox" \$\{data.daily[6] === '1' ? 'checked' : ''\}>
+                <label class="m-2 custom-control-label" for="checkbox-6">Sat</label>
+            </div>
+            <div class="custom-control custom-checkbox ">
+                <input id="checkbox-0" class="m-1 custom-control-input" type="checkbox" \$\{data.daily[0] === '1' ? 'checked' : ''\}>
+                <label class="m-2 custom-control-label" for="checkbox-0">Sun</label>
+            </div>
+        </div>
+        <div id="dailyAlert" class="d-none form-group alert alert-danger alert-dismissible fade show"></div>
+        \`;
+    }
+
+    var dialogGUI = {
+        title: '',
+        message: '',
+        button: {}
+    };
+    var calendarEl = document.getElementById('calendar');
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        height: 'parent',
+        themeSystem: 'bootstrap',
+        plugins: ['interaction', 'dayGrid'],
+        defaultView: 'dayGridWeek',
+        header: {
+            left: 'title',  
+            center: 'addNewDaily',
+            right: 'prev, today, next'
+        },
+
+        customButtons: {
+            addNewDaily: { text: 'add event',
                 click: function(){
-                        let dialog = bootbox.dialog({
-                            title: 'Add new event',
-                            message: \`
-                            <div class="d-flex flex-row align-items-center">
-                                <input class="form-control m-2" id="daily_name" placeholder="What would you do ?">
-                            </div>
-                            <div class="d-flex flex-row align-items-center">
-                                From <input class="form-control m-2" type="time" id="from_time">
-                                To <input class="form-control m-2" type="time" id="to_time">
-                            </div>
-                            <div class="d-flex flex-row align-items-center">
-                                <label class="m-2"><input id="checkbox-1" class="m-1" type="checkbox">Mon</label>
-                                <label class="m-2"><input id="checkbox-2" class="m-1" type="checkbox">Tue</label>
-                                <label class="m-2"><input id="checkbox-3" class="m-1" type="checkbox">Wed</label>
-                                <label class="m-2"><input id="checkbox-4" class="m-1" type="checkbox">Thu</label>
-                                <label class="m-2"><input id="checkbox-5" class="m-1" type="checkbox">Fri</label>
-                                <label class="m-2"><input id="checkbox-6" class="m-1" type="checkbox">Sat</label>
-                                <label class="m-2"><input id="checkbox-0" class="m-1" type="checkbox">Sun</label>
-                            </div>
-                            <div id="dailyAlert" class="d-none form-group alert alert-danger alert-dismissible fade show"></div>
-                            \`,
-                            buttons: {
-                                ok: {
-                                    label: 'OK',
-                                    className: 'btn-info',
-                                    callback: function(){
-                                        const dailyName = $("#daily_name").val();
-                                        const fromTime = $("#from_time").val();
-                                        const toTime = $("#to_time").val();
-                                        let dailyDays = [];
-                                        for (let i = 0; i < 7; ++i)
-                                            dailyDays.push($("#checkbox-" + i).is(':checked'));
+                    dialogGUI.title = 'Add new event';
+                    dialogGUI.message = getDailyDialogBoxMessage({name: '', from_t: '', to_t: '', daily: '0000000'});
+                    dialogGUI.buttons = {
+                        ok: {
+                            label: 'OK',
+                            className: 'btn-info',
+                            callback: function(){
+                                const dailyName = $("#daily_name").val();
+                                const fromTime = $("#from_time").val();
+                                const toTime = $("#to_time").val();
+                                let dailyDays = [];
+                                for (let i = 0; i < 7; ++i)
+                                    dailyDays.push($("#checkbox-" + i).is(':checked'));
 
-                                        $.post('/dashboard/daily/add', {name: dailyName, from_time: fromTime, to_time: toTime, daily_days: dailyDays})
-                                        .done((data) => {
-                                            if (data.content === 'Invalid'){
-                                                $("#dailyAlert").toggleClass("d-none d-block");
-                                                $("#dailyAlert").text("Your input is invalid !");
-                                            }
-                                            else if (data.content === 'Error'){
-                                                $("#dailyAlert").toggleClass("d-none d-block");
-                                                $("#dailyAlert").text("Some errors have occured !");
-                                            }
-                                            else {
-                                                bootbox.hideAll();
-                                                bootbox.alert("Successful");
-                                                $('#content').html(data.content);
-                                            }
-                                        });
-                                        return false;
+                                $.post('/dashboard/daily/add', {name: dailyName, from_time: fromTime, to_time: toTime, daily_days: dailyDays})
+                                .done((data) => {
+                                    if (data.content === 'Invalid'){
+                                        $("#dailyAlert").toggleClass("d-none d-block");
+                                        $("#dailyAlert").text("Your input is invalid !");
                                     }
-                                }
+                                    else if (data.content === 'Error'){
+                                        $("#dailyAlert").toggleClass("d-none d-block");
+                                        $("#dailyAlert").text("Some errors have occured !");
+                                    }
+                                    else {
+                                        bootbox.hideAll();
+                                        bootbox.alert("Successful");
+                                        $('#content').html(data.content);
+                                    }
+                                });
+                                return false;
                             }
-                        });s
-                    }
+                        }
+                    };
+                    bootbox.dialog(dialogGUI);
                 }
-            },
-
-            eventLimit: true,
-            weekNumbers: true,
-            events: ${JSON.stringify(dailyData)},
-            eventClick: function(info){
-                const eventName = info.event.title;
-                bootbox.confirm("Are you sure for deleting " + eventName + "?", function(result){
-                    if (result) {
-                        $.post('/dashboard/daily/delete', {name: eventName})
-                        .done((data) => {
-                            if (data.content === 'Error'){
-                                bootbox.alert("Some errors have occured!");
-                            }
-                            else {
-                                bootbox.alert("You've deleted " + eventName);
-                                $('#content').html(data.content);
-                            }
-                        });
-                    }
-                })
-
             }
-        });
-        calendar.render();
+        },
+
+        eventLimit: true,
+        weekNumbers: true,
+        events: ${JSON.stringify(dailyData)},
+        eventClick: function(info){
+            const eventName = info.event.title;
+            dialogGUI.title = \`Modify \$\{eventName\}\`;
+            $.post('/dashboard/daily/getdata', {name: eventName})
+            .done((data) => {
+                $("#daily_name").text(data.content);
+                dialogGUI.message = getDailyDialogBoxMessage(data);
+                dialogGUI.buttons = {
+                    modify: {
+                        label: 'Modify',
+                        className: 'btn-info',
+                        callback: function(){
+                            const oldName = eventName;
+                            const newName = $("#daily_name").val();
+                            const fromTime = $("#from_time").val();
+                            const toTime = $("#to_time").val();
+                            let dailyDays = [];
+                            for (let i = 0; i < 7; ++i)
+                                dailyDays.push($("#checkbox-" + i).is(':checked'));
+
+                            $.post('/dashboard/daily/modify', {oldName: eventName, newName: newName, fromTime: fromTime, toTime: toTime, dailyDays: dailyDays})
+                            .done((data) => {
+                                if (data.content === 'Error'){
+                                    bootbox.alert("Some errors have occured!");
+                                }
+                                else {
+                                    bootbox.hideAll();
+                                    bootbox.alert("You've modified " + eventName);
+                                    $('#content').html(data.content);
+                                }
+                            });
+
+                            return false;
+                        }
+                    },
+
+                    delete: {
+                        label: 'Delete',
+                        className: 'btn-danger',
+                        callback: function(){
+                            bootbox.confirm("Are you sure for deleting " + eventName + "?", function(result){
+                                if (result) {
+                                    $.post('/dashboard/daily/delete', {name: eventName})
+                                    .done((data) => {
+                                        if (data.content === 'Error'){
+                                            bootbox.alert("Some errors have occured!");
+                                        }
+                                        else {
+                                            bootbox.alert("You've deleted " + eventName);
+                                            $('#content').html(data.content);
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    }
+                };
+                bootbox.dialog(dialogGUI);
+            });
+        }
+    });
+    calendar.render();
     </script>`;
 
     return returnData;
