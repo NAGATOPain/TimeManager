@@ -154,7 +154,9 @@ function dashBoardProcessing(app){
         const fromTime = req.body.from_time;
         const toTime = req.body.to_time;
         const dailyDays = req.body.daily_days;
-        const message = await model.addDailyWork(req, dailyWork, fromTime, toTime, dailyDays);
+        const color = req.body.color;
+
+        const message = await model.addDailyWork(req, dailyWork, fromTime, toTime, dailyDays, color);
         if (message === 'OK'){
             const renderRes = await renderer.render('btnDaily', req);
             res.status(200).send(renderRes);
@@ -177,7 +179,9 @@ function dashBoardProcessing(app){
         const fromTime = req.body.fromTime;
         const toTime = req.body.toTime;
         const dailyDays = req.body.dailyDays;
-        const message = await model.updateDailyWork(req, oldName, newName, fromTime, toTime, dailyDays);
+        const color = req.body.color;
+
+        const message = await model.updateDailyWork(req, oldName, newName, fromTime, toTime, dailyDays, color);
         if (message === 'OK'){
             const renderRes = await renderer.render('btnDaily', req);
             res.status(200).send(renderRes);

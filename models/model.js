@@ -157,9 +157,9 @@ function deleteInboxWorkForUser(username, inboxWork){
         });
 	});
 }
-function addDailyWorkForUser(username, dailyWork, fromTime, toTime, dailyDays){
+function addDailyWorkForUser(username, dailyWork, fromTime, toTime, dailyDays, color){
 	return new Promise((resolve, reject) => {
-		const sql = `INSERT INTO daily VALUES (?, ?, ?, ?, ?);`;
+		const sql = `INSERT INTO daily VALUES (?, ?, ?, ?, ?, ?);`;
 
 		if (fromTime === "" || fromTime === undefined){
 			resolve('Invalid'); return;
@@ -177,17 +177,17 @@ function addDailyWorkForUser(username, dailyWork, fromTime, toTime, dailyDays){
 		for (let day of dailyDays)
 			dailyDaysString += (day === 'true' ? 1 : 0);
 
-        db.run(sql, [username, dailyWork, fromTime, toTime, dailyDaysString], (err) => {
+        db.run(sql, [username, dailyWork, fromTime, toTime, dailyDaysString, color], (err) => {
             if (err) resolve('Error');
             else resolve('OK');
         });
 	});
 }
 
-function updateDailyWorkForUser(username, oldName, newName, fromTime, toTime, dailyDays){
+function updateDailyWorkForUser(username, oldName, newName, fromTime, toTime, dailyDays, color){
     return new Promise((resolve, reject) => {
         const sql = `UPDATE daily SET 
-            name = ? , from_t = ? , to_t = ? , daily = ? 
+            name = ? , from_t = ? , to_t = ? , daily = ? , color = ?
         WHERE user = ? AND name = ? ;`;
 
 		if (fromTime === "" || fromTime === undefined){
@@ -206,7 +206,7 @@ function updateDailyWorkForUser(username, oldName, newName, fromTime, toTime, da
 		for (let day of dailyDays)
 			dailyDaysString += (day === 'true' ? 1 : 0);
 
-        db.run(sql, [newName, fromTime, toTime, dailyDaysString, username, oldName], (err) => {
+        db.run(sql, [newName, fromTime, toTime, dailyDaysString, color, username, oldName], (err) => {
             if (err) resolve('Error');
             else resolve('OK');
         });
@@ -469,7 +469,7 @@ exports.getDailyData = async (request) => {
     dailyData.forEach((item, index) => {
         let daysOfWeek = [];
         for (let i in item.daily) if (item.daily[i] === '1') daysOfWeek.push(i);
-        data.push({title: item.name, startTime: item.from_t, endTime: item.to_t, daysOfWeek: daysOfWeek, color: "#45fc03"});
+        data.push({title: item.name, startTime: item.from_t, endTime: item.to_t, daysOfWeek: daysOfWeek, color: item.color});
     });
 
     return data;
@@ -482,25 +482,24 @@ exports.getDailyWork = async (request, dailyWorkName) => {
     return dailyData;
 }
 
-exports.updateDailyWork = async (request, oldName, newName, fromTime, toTime, dailyDays) => {
+exports.updateDailyWork = async (request, oldName, newName, fromTime, toTime, dailyDays, color) => {
     if (!isProperStringWithSomeSpecialCharacter(oldName) || !isProperStringWithSomeSpecialCharacter(newName)){
         return 'Invalid';
     }
     else {
         const username = exports.parseCookie(request.cookies)[0];
-        const updateStatus = await updateDailyWorkForUser(username, oldName, newName, fromTime, toTime, dailyDays);
+        const updateStatus = await updateDailyWorkForUser(username, oldName, newName, fromTime, toTime, dailyDays, color);
         return updateStatus;
     }
 }
 
-exports.addDailyWork = async (request, dailyWork, fromTime, toTime, dailyDays) => {
-    console.log(request);
+exports.addDailyWork = async (request, dailyWork, fromTime, toTime, dailyDays, color) => {
 	if (!isProperStringWithSomeSpecialCharacter(dailyWork)){
         return 'Invalid';
     }
     else {
         const username = exports.parseCookie(request.cookies)[0];
-        const addStatus = await addDailyWorkForUser(username, dailyWork, fromTime, toTime, dailyDays);
+        const addStatus = await addDailyWorkForUser(username, dailyWork, fromTime, toTime, dailyDays, color);
         return addStatus;
     }
 }

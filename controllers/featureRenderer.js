@@ -217,6 +217,19 @@ async function renderDailyFeature(request){
                 <label class="m-2 custom-control-label" for="checkbox-0">Sun</label>
             </div>
         </div>
+
+        <div class="btn-group btn-group-toggle d-flex align-items-center mt-3 mb-3" data-toggle="buttons">
+            <label id="colorLabel0" class="btn btn-outline-success active mr-3">
+                <input type="radio" name="options" id="colorOption0" autocomplete="off" checked>Green
+            </label>
+            <label id="colorLabel1" class="btn btn-outline-warning mr-3">
+                <input type="radio" name="options" id="colorOption1" autocomplete="off">Yellow
+            </label>
+            <label id="colorLabel2" class="btn btn-outline-info">
+                <input type="radio" name="options" id="colorOption2" autocomplete="off">Blue
+            </label>
+        </div>
+
         <div id="dailyAlert" class="d-none form-group alert alert-danger alert-dismissible fade show"></div>
         \`;
     }
@@ -254,8 +267,14 @@ async function renderDailyFeature(request){
                                 let dailyDays = [];
                                 for (let i = 0; i < 7; ++i)
                                     dailyDays.push($("#checkbox-" + i).is(':checked'));
+                                let color = '';
+                                for (let i = 0; i < 3; ++i){
+                                    if ($("#colorOption" + i).is(':checked')){
+                                        color = $("#colorLabel" + i).css("background-color");
+                                    }
+                                }
 
-                                $.post('/dashboard/daily/add', {name: dailyName, from_time: fromTime, to_time: toTime, daily_days: dailyDays})
+                                $.post('/dashboard/daily/add', {name: dailyName, from_time: fromTime, to_time: toTime, daily_days: dailyDays, color: color})
                                 .done((data) => {
                                     if (data.content === 'Invalid'){
                                         $("#dailyAlert").toggleClass("d-none d-block");
@@ -302,8 +321,15 @@ async function renderDailyFeature(request){
                             let dailyDays = [];
                             for (let i = 0; i < 7; ++i)
                                 dailyDays.push($("#checkbox-" + i).is(':checked'));
+                            
+                            let color = '';
+                            for (let i = 0; i < 3; ++i){
+                                if ($("#colorOption" + i).is(':checked')){
+                                    color = $("#colorLabel"+ i).css("background-color");
+                                }
+                            }
 
-                            $.post('/dashboard/daily/modify', {oldName: eventName, newName: newName, fromTime: fromTime, toTime: toTime, dailyDays: dailyDays})
+                            $.post('/dashboard/daily/modify', {oldName: eventName, newName: newName, fromTime: fromTime, toTime: toTime, dailyDays: dailyDays, color: color})
                             .done((data) => {
                                 if (data.content === 'Error'){
                                     bootbox.alert("Some errors have occured!");
