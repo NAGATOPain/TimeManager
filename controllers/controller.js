@@ -260,6 +260,42 @@ function dashBoardProcessing(app){
             res.status(200).redirect('/signin');
         }
         else {
+            // Sync data from Wunderlist
+
+            const access_token = await model.getWunderlistAccessToken(req);
+            if (typeof access_token === "string"){
+                axios.get('https://a.wunderlist.com/api/v1/lists', {
+                    headers: {
+                        "x-access-token": `${access_token}`,
+                        "x-client-id": `${enviroment.WUNDERLIST_CLIENT_ID}`
+                    }
+                }).then(function(response){
+                    let inboxObject = response.data.find(obj => obj.title === 'inbox');
+                    if (inboxObject !== undefined){
+                        axios.get('https://a.wunderlist.com/api/v1/tasks', {
+                            headers:{
+                                "x-access-token": `${access_token}`,
+                                "x-client-id": `${enviroment.WUNDERLIST_CLIENT_ID}`
+                            },
+                            params:{
+                                "list_id": inboxObject.id
+                            }
+                            
+                        }).then(function(response){
+                            console.log(response.data);
+                        }).catch(function(err){
+                            console.log(err);
+                        });
+                    }
+                }).catch(function(err){
+                    console.log(err);
+                });
+            }
+            else {
+                console.log("??");
+            }
+
+            // Rendering
             const requestData = await renderer.render('btnHome', req);
             requestData.title = `Hi ${model.parseCookie(req.cookies)[0]}, may I help you?`;
             res.status(200).render(VIEWS_PATH + 'dashboard', requestData);

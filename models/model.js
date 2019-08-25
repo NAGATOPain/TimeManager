@@ -28,7 +28,7 @@ function isProperString(str){
 }
 
 function isProperStringWithSomeSpecialCharacter(str){
-	return /^(\w[\w-\s.,'"?()]+)$/.test(str);
+	return /^(\w[\w-\s.,'"?()ÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỀỂưăạảấầẩẫậắằẳẵặẹẻẽềềểỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪễệỉịọỏốồổỗộớờởỡợụủứừỬỮỰỲỴÝỶỸửữựỳỵỷỹ]+)$/.test(str);
 }
 
 function getCurrentDateInYYYYMMDDFormat(){
@@ -100,6 +100,19 @@ function addWunderlistAccessTokenForUser(username, access_token){
             else{
                 resolve('OK');
             }
+        });
+    });
+}
+
+function getWunderlistAccessTokenForUser(username){
+    return new Promise((resolve, reject) => {
+        const sql = `SELECT wl_access_token access_token FROM user WHERE user = ? ;`;
+        db.get(sql, [username], (err, row) => {
+            if (err || row === undefined || row === ""){
+                resolve(undefined);
+            }
+            else
+                resolve(row.access_token);
         });
     });
 }
@@ -450,6 +463,12 @@ exports.addWunderlistAccessToken = async(request, access_token) => {
     const username = exports.parseCookie(request.cookies)[0];
     const message = await addWunderlistAccessTokenForUser(username, access_token);
     return message;
+}
+
+exports.getWunderlistAccessToken = async (request) => {
+    const username = exports.parseCookie(request.cookies)[0];
+    const result = await getWunderlistAccessTokenForUser(username);
+    return result;
 }
 
 exports.getCalendarData = async (request) => {
