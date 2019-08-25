@@ -2,6 +2,7 @@ const VIEWS_PATH = '../views/';
 var renderer = require('./featureRenderer.js');
 var enviroment = require('../env.js');
 var model = require('../models/model.js');
+const axios = require('axios');
 
 var signInUpRequestData = {
     APP_NAME: enviroment.APP_NAME,
@@ -113,6 +114,27 @@ function dashBoardProcessing(app){
         }
     });
 
+    // Wunderlist
+
+    app.get('/wunderlist/token', (req, res) => {
+        const requestToken = req.query.code;
+        axios.post('https://www.wunderlist.com/oauth/access_token', {
+            client_id: `${enviroment.WUNDERLIST_CLIENT_ID}`,
+            client_secret: `${enviroment.WUNDERLIST_CLIENT_SECRET}`,
+            code: `${requestToken}`
+        }).then(async function(response){
+            const message = await model.addWunderlistAccessToken(req, response.data.access_token);
+            if (message === 'OK'){
+                res.render(VIEWS_PATH + 'close');
+            }
+            else {
+                res.status(200).send({content: message});
+            }
+        }).catch(function (error){
+            console.log(error);
+        });
+    });
+
     // Inbox
     app.post('/dashboard/inbox/add', async (req, res) => {
         const inboxWork = req.body.inbox;
@@ -215,6 +237,20 @@ function dashBoardProcessing(app){
     app.post('/dashboard/money/render', async (req, res) => {
         const renderRes = await renderer.render('btnMoney', req);
         res.status(200).send(renderRes); 
+    });
+
+    app.post('/dashboard/money/update', async (req, res) => {
+        const oldName = req.body.oldName;
+        const newName = req.body.newName;
+        const oldMoney = req.body.oldMoney;
+        const newMoney = req.body.newMoney;
+
+        const message = await model.updateMoney(req, oldName, newName, oldMoney, newMoney);
+        if (message === "OK"){
+            const renderRes = await renderer.render('btnMoney', req);
+            res.status(200).send(renderRes);
+        }   
+        else res.status(200).send({content: message});
     });
 
     // General

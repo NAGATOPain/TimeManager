@@ -14,7 +14,10 @@ function sideButtonClick(btnName){
     });
 }
 
-function inboxSubmitButtonClick(inboxWork){
+function syncButtonClick(){
+    const WUNDERLIST_CLIENT_ID = `d05f1b8a90a3a914b30a`;
+    const WUNDERLIST_REDIRECT_URL = `http://localhost:3000/wunderlist/token`;
+    window.open(`https://www.wunderlist.com/oauth/authorize?client_id=${WUNDERLIST_CLIENT_ID}&redirect_uri=${WUNDERLIST_REDIRECT_URL}&state=RANDOM`, "", "width:100%,height:100%");
 }
 
 $(document).ready(function(){
@@ -25,4 +28,6 @@ $(document).ready(function(){
     button.forEach((btnName) => {
         $(`#${btnName}`).click(() => sideButtonClick(btnName));
     });
+
+    $(`#syncButton`).click(syncButtonClick);
 });

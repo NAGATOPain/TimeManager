@@ -90,6 +90,20 @@ function getHashedPassword(username){
     });
 }
 
+function addWunderlistAccessTokenForUser(username, access_token){
+    return new Promise((resolve, reject) => {
+        const sql = `UPDATE user SET wl_access_token = ? WHERE user = ? ;`
+        db.run(sql, [access_token, username], (err) => {
+            if (err) {
+                resolve('Error');
+            }
+            else{
+                resolve('OK');
+            }
+        });
+    });
+}
+
 function getInboxDataOfUser(username){
 
     return new Promise((resolve, reject) => {
@@ -215,7 +229,7 @@ function updateDailyWorkForUser(username, oldName, newName, fromTime, toTime, da
 
 function getDailyDataForUser(username){
 	return new Promise((resolve, reject) => {
-        const sql = `SELECT * FROM daily WHERE user = ?`;
+        const sql = `SELECT * FROM daily WHERE user = ? ;`;
         db.all(sql, [username], (err, rows) => {
             if (err || rows === undefined){
                 resolve(undefined);
@@ -258,7 +272,7 @@ function deleteDailyWorkForUser(username, dailyWork){
 
 function addMoneyForUser(username, moneyName, money){
 	return new Promise((resolve, reject) => {
-        const sql = `INSERT INTO money VALUES (?, ?, ?, ?)`;
+        const sql = `INSERT INTO money VALUES (?, ?, ?, ?);`;
         
         const time = getCurrentDateInYYYYMMDDFormat();
 
@@ -271,6 +285,29 @@ function addMoneyForUser(username, moneyName, money){
 			else resolve('OK');
 		});
 	});
+}
+
+function updateMoneyForUser(username, oldName, newName, oldMoney, newMoney){
+    return new Promise((resolve, reject) => {
+        const sql = `UPDATE money 
+        SET moneyName = ? , money = ?  
+        WHERE user = ? AND moneyName = ? AND money = ? ;`;
+
+        oldMoney = oldMoney.replace(/,/g ,'');
+        newMoney = newMoney.replace(/,/g ,'');
+
+        if (oldMoney === "" || oldMoney === undefined || isNaN(oldMoney) || newMoney === "" || newMoney === undefined || isNaN(newMoney)){
+			resolve('Invalid'); return;
+		}
+
+        db.run(sql, [newName, newMoney, username, oldName, oldMoney], (err) => {
+        if (err) {
+            console.log(err);
+            resolve('Error');
+        }
+            else resolve('OK');
+        });
+    });
 }
 
 function getMoneyDataForUser(username, request){
@@ -409,6 +446,12 @@ exports.validateLogin = async function(username, password){
     }
 }
 
+exports.addWunderlistAccessToken = async(request, access_token) => {
+    const username = exports.parseCookie(request.cookies)[0];
+    const message = await addWunderlistAccessTokenForUser(username, access_token);
+    return message;
+}
+
 exports.getCalendarData = async (request) => {
 	const username = exports.parseCookie(request.cookies)[0];
 	let result = [];
@@ -532,6 +575,18 @@ exports.getMoneyData = async (request) => {
     });
 
 	return moneyData;
+}
+
+exports.updateMoney = async (request, oldName, newName, oldMoney, newMoney) => {
+    if (!isProperStringWithSomeSpecialCharacter(newName) || !isProperStringWithSomeSpecialCharacter(oldName)){
+		return 'Invalid';
+	}
+	else {
+		const username = exports.parseCookie(request.cookies)[0];
+		const updateStatus = await updateMoneyForUser(username, oldName, newName, oldMoney, newMoney);
+		return updateStatus;
+	}
+
 }
 
 exports.getMoneySum = async (request) => {

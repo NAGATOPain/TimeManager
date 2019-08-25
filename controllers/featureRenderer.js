@@ -334,6 +334,9 @@ async function renderDailyFeature(request){
                                 if (data.content === 'Error'){
                                     bootbox.alert("Some errors have occured!");
                                 }
+                                else if (data.content === 'Invalid'){
+                                    bootbox.alert("Your input is invalid!");
+                                }
                                 else {
                                     bootbox.hideAll();
                                     bootbox.alert("You've modified " + eventName);
@@ -485,6 +488,7 @@ async function renderMoneyFeature(request){
       <th scope="col">Product</th>
       <th scope="col">Cost</th>
       <th scope="col">Date</th>
+      <th scope="col"></th>
     </tr>
     </thead><tbody>
     `;
@@ -492,9 +496,55 @@ async function renderMoneyFeature(request){
     moneyData.forEach((value, index) => {
         returnData.content += `<tr class="${parseFloat(value.money) >= 0 ? "table-success" : "table-danger"}">
             <th>${index + 1}</th>
-            <td>${value.moneyName}</td>
-            <td>${value.money}</td>
-            <td>${value.time}</td></tr>
+            <td id="moneyName-${index}">${value.moneyName}</td>
+            <td id="money-${index}">${value.money}</td>
+            <td id="time-${index}">${value.time}</td>
+            <td class="text-center">
+                <button id="button-${index}" type="button" class="btn btn-dark"><i class="fas fa-edit"></i></button>
+            </td>
+            <script>
+                $("#button-${index}").click(function () {
+                    bootbox.dialog({
+                        title: "Modify event ${value.moneyName} at ${value.time}",
+                        message: \`
+                        <div class="d-flex flex-row align-items-center">
+                            Name <input class="form-control m-2" id="moneyDialogName" value="${value.moneyName}">
+                            Cost <input class="form-control m-2" id="moneyDialog" value="${value.money}">
+                        </div>
+                        \`,
+                        onEscape: true,
+                        buttons: {
+                            ok: {
+                                label: 'Modify',
+                                className: 'btn-dark',
+                                callback: function() {
+                                    const oldName = '${value.moneyName}';
+                                    const newName = $("#moneyDialogName").val();
+                                    const oldMoney = '${value.money}';
+                                    const newMoney = $("#moneyDialog").val();
+
+                                    $.post('/dashboard/money/update', {oldName: oldName, newName: newName, oldMoney: oldMoney, newMoney: newMoney})
+                                    .done((data) => {
+                                        if (data.content === 'Error'){
+                                            bootbox.alert("Some errors have occured !");
+                                        }
+                                        else if (data.content === 'Invalid'){
+                                            bootbox.alert("Your input is invalid !");
+                                        }
+                                        else {
+                                            bootbox.hideAll();
+                                            bootbox.alert("Modified ${value.moneyName} successful!");
+                                            $('#content').html(data.content);
+                                        }
+                                    });
+                                    return false;
+                                }
+                            }
+                        }
+                    });
+                });
+            </script>
+            </tr>
         `;
     });
 
@@ -510,7 +560,7 @@ async function renderMoneyFeature(request){
     </table>
     <script>
         $('#moneyTable').DataTable({
-            scrollY: '50vh',
+            scrollY: '60vh',
             scrollCollapse: true,
             searching: false, paging: false, info: false
         });
@@ -518,10 +568,6 @@ async function renderMoneyFeature(request){
     </script>`;
 
     return returnData;
-}
-
-async function renderScheduleFeature(request){
-    return {title: 'Schedule Render', content: '6'};
 }
 
 async function renderError(request){
@@ -546,9 +592,6 @@ exports.render = async (btnClicked, request) => {
 
     else if (btnClicked === 'btnMoney')
         return renderMoneyFeature(request);
-
-    else if (btnClicked === 'btnSchedule')
-        return renderScheduleFeature(request);
 
     else
         return renderError(request);
