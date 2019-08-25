@@ -2,7 +2,6 @@ const VIEWS_PATH = '../views/';
 var renderer = require('./featureRenderer.js');
 var enviroment = require('../env.js');
 var model = require('../models/model.js');
-const axios = require('axios');
 
 var signInUpRequestData = {
     APP_NAME: enviroment.APP_NAME,
@@ -260,36 +259,21 @@ function dashBoardProcessing(app){
             res.status(200).redirect('/signin');
         }
         else {
-            // Sync data from Wunderlist
-
+            
+            // Download data from Wunderlist, only uncompleted one
+            
             const access_token = await model.getWunderlistAccessToken(req);
             if (typeof access_token === "string"){
-                axios.get('https://a.wunderlist.com/api/v1/lists', {
-                    headers: {
-                        "x-access-token": `${access_token}`,
-                        "x-client-id": `${enviroment.WUNDERLIST_CLIENT_ID}`
-                    }
-                }).then(function(response){
-                    let inboxObject = response.data.find(obj => obj.title === 'inbox');
-                    if (inboxObject !== undefined){
-                        axios.get('https://a.wunderlist.com/api/v1/tasks', {
-                            headers:{
-                                "x-access-token": `${access_token}`,
-                                "x-client-id": `${enviroment.WUNDERLIST_CLIENT_ID}`
-                            },
-                            params:{
-                                "list_id": inboxObject.id
-                            }
-                            
-                        }).then(function(response){
-                            console.log(response.data);
-                        }).catch(function(err){
-                            console.log(err);
-                        });
-                    }
-                }).catch(function(err){
-                    console.log(err);
-                });
+                const wunderListInboxID = await model.getWunderlistInboxListID(access_token);
+                let wunderListInboxTasks = await model.getWunderlistAllTasksOfListID(access_token, wunderListInboxID, false);
+
+                let inboxData = await model.getInboxData(req);
+                wunderListInboxTasks.forEach(async (element) => {
+                    let inInboxData = inboxData.find((arrElement) => {return arrElement.name === element.title;})
+                    if (inInboxData === undefined){
+                        await model.addInboxWork(req, element.title, element.created_at, '');
+                    } 
+                });  
             }
             else {
                 console.log("??");

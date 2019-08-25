@@ -2,6 +2,7 @@ const constants = require('../env.js');
 var sqlite3 = require('sqlite3').verbose();
 var bcrypt = require('bcryptjs');
 var sha256 = require('js-sha256');
+const axios = require('axios');
 
 var fs = require('fs');
 var existsDatabase = fs.existsSync(constants.DATABASE_PATH);
@@ -459,6 +460,8 @@ exports.validateLogin = async function(username, password){
     }
 }
 
+// Wunderlist
+
 exports.addWunderlistAccessToken = async(request, access_token) => {
     const username = exports.parseCookie(request.cookies)[0];
     const message = await addWunderlistAccessTokenForUser(username, access_token);
@@ -471,12 +474,48 @@ exports.getWunderlistAccessToken = async (request) => {
     return result;
 }
 
+exports.getWunderlistInboxListID = async (access_token) => {
+    return new Promise((resolve, reject) => {
+        axios.get('https://a.wunderlist.com/api/v1/lists', {
+            headers: {
+                "x-access-token": `${access_token}`,
+                "x-client-id": `${constants.WUNDERLIST_CLIENT_ID}`
+            }
+        }).then(function(response){
+            resolve(response.data.find(obj => obj.title === 'inbox').id);
+        }).catch(function(error){
+            resolve("Error");
+        });
+    });
+}
+
+exports.getWunderlistAllTasksOfListID = async (access_token, list_id, completed) => {
+    return new Promise((resolve, reject) => {
+        axios.get('https://a.wunderlist.com/api/v1/tasks', {
+            headers:{
+                "x-access-token": `${access_token}`,
+                "x-client-id": `${constants.WUNDERLIST_CLIENT_ID}`
+            },
+            params:{
+                "completed": completed,
+                "list_id": list_id
+            }                 
+        }).then(function(response){
+            resolve(response.data);
+        }).catch(function (error){
+            resolve("Error");
+        });
+    });
+}
+
+// Calendar data
+
 exports.getCalendarData = async (request) => {
 	const username = exports.parseCookie(request.cookies)[0];
 	let result = [];
 
 	// Get all inbox works
-	const inboxData = await getInboxDataOfUser(username);
+    const inboxData = await getInboxDataOfUser(username);
 	inboxData.forEach((item) => {
 		result.push({title: item.name, start: item.from_t, end: item.to_t, color: '#42a7f5'});
 	});
